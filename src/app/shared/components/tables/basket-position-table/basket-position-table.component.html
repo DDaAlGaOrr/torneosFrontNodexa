@@ -1,0 +1,66 @@
+<div class="card border-0 container rounded-3 shadow-sm">
+  <div class="card-body">
+    <h6 class="fw-semibold mb-3">Tabla de Posiciones</h6>
+
+    <div style="margin-right: 10px">
+      <select
+        class="form-field__input"
+        style="margin-right: 10px"
+        [(ngModel)]="tournamentId"
+      >
+        <option value="" disabled selected>Selecciona un equipo</option>
+        <option
+          *ngFor="let tournament of tournaments()"
+          value="{{ tournament.id }}"
+        >
+          {{ tournament.name }}
+        </option>
+      </select>
+      <button (click)="loadTable()" class="btn btn-secondary">Cargar</button>
+    </div>
+
+    <div class="tabla-wrapper">
+      <table class="table table-hover align-middle mb-0 tabla-scroll">
+        <thead>
+          <tr>
+            <th class="sticky-col col-pos">#</th>
+            <th class="sticky-col col-team">Equipo</th>
+            <th class="text-center">PJ</th>
+            <th class="text-center">G</th>
+            <th class="text-center">P</th>
+            <th class="text-center">GF</th>
+            <th class="text-center">GC</th>
+            <th class="text-center">DIF</th>
+            <th class="text-end">PTS</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let team of this.standingData; let i = index">
+            <td class="sticky-col col-pos">
+              {{ i + 1 }}
+            </td>
+
+            <td class="sticky-col col-team">
+              {{ team.team_name }}
+            </td>
+
+            <td class="text-center">{{ team.played }}</td>
+            <td class="text-center">{{ team.won }}</td>
+            <td class="text-center">{{ team.lost }}</td>
+            <td class="text-center">{{ team.goals_for }}</td>
+            <td class="text-center">{{ team.goals_against }}</td>
+
+            <td class="text-center">
+              {{ team.goal_diff }}
+            </td>
+
+            <td class="text-end fw-semibold">
+              {{ team.points }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

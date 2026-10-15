@@ -1,0 +1,169 @@
+// ── Variables ──────────────────────────────────────────────────────────────
+$card-width    : 200px;
+$card-gap      : 32px;
+$round-gap     : 60px;
+$card-radius   : 10px;
+$border-color  : #e2e8f0;
+$text-primary  : #1e293b;
+$text-muted    : #94a3b8;
+$bg-card       : #ffffff;
+$bg-page       : #f8fafc;
+$color-live    : #22c55e;
+$color-winner  : #3b82f6;
+
+// ── Estilo General ─────────────────────────────────────────────────────────
+.bracket-page {
+  background: $bg-page;
+  min-height: 100vh;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+// ── Cabecera (Igual que la anterior) ──────────────────────────────────────
+.bracket-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+
+  &__sport {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0;
+  }
+
+  &__status {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    &.badge-in_progress { background: #dcfce7; color: #166534; }
+    &.badge-finished    { background: #e0e7ff; color: #3730a3; }
+    &.badge-pending     { background: #f1f5f9; color: #475569; }
+  }
+}
+
+// ── Estructura del Bracket ────────────────────────────────────────────────
+.bracket-scroll    { overflow-x: auto; padding-bottom: 24px; }
+.bracket-container { position: relative; display: inline-block; min-width: 100%; }
+.bracket-lines     { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
+
+.bracket-rounds {
+  display: flex;
+  gap: $round-gap;
+  padding: 16px 0;
+}
+
+.bracket-round {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: $card-width;
+  justify-content: center;
+}
+
+.round-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: $text-muted;
+  margin-bottom: 16px;
+}
+
+.round-content {
+  display: flex;
+  flex-direction: column;
+  gap: $card-gap;
+  width: 100%;
+}
+
+// ── Tarjetas de Partido (Simplificadas) ───────────────────────────────────
+.match-card {
+  width: $card-width;
+  background: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: $card-radius;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+
+  &--tbd { opacity: 0.5; }
+
+  // Estados visuales
+  &.status-live     { border-left: 3px solid $color-live; }
+  &.status-finished { border-left: 3px solid #c7d2fe; }
+
+  &__header {
+    padding: 6px 10px;
+    border-bottom: 1px solid $border-color;
+    background: #fafafa;
+  }
+
+  &__status {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    &.status-live     { color: $color-live; }
+    &.status-finished { color: #6366f1; }
+  }
+
+  &__team {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+
+    &--winner {
+      background: #f0f9ff;
+      .match-card__team-name { font-weight: 700; color: $text-primary; }
+      .match-card__score     { color: $color-winner; font-weight: 700; }
+    }
+  }
+
+  &__team-name {
+    font-size: 13px;
+    color: $text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__score {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  &__divider {
+    height: 1px;
+    background: $border-color;
+    margin: 0 10px;
+  }
+}
+
+// ── Tarjeta de Pase Directo ───────────────────────────────────────────────
+.bye-card {
+  width: $card-width;
+  background: #f8fafc;
+  border: 1.5px dashed $border-color;
+  border-radius: $card-radius;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  &__team { font-size: 13px; font-weight: 600; }
+  &__label {
+    font-size: 10px;
+    color: $color-winner;
+    background: #eff6ff;
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
+}

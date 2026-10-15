@@ -1,0 +1,51 @@
+<div class="tabs-container d-flex justify-content-center">
+  <div class="tabs-pill d-flex">
+
+    <button class="tab-btn" [class.active]="activeTab === 'posTableView'" (click)="setTab('posTableView')">
+      Tabla de posiciones
+    </button>
+
+    <button class="tab-btn" [class.active]="activeTab === 'bracketView'" (click)="setTab('bracketView')">
+      Brackets
+    </button>
+
+  </div>
+</div>
+
+
+<!-- <div class="custom-tabs d-flex">
+  <button
+    type="button"
+    class="tabl-link"
+    [ngClass]="{ 'active-tab': activeTabGender === 'masculino' }"
+    (click)="setTabGender('masculino')"
+  >
+    Fútbol masculino
+  </button>
+
+  <button
+    type="button"
+    class="tabl-link"
+    [ngClass]="{ 'active-tab': activeTabGender === 'femenino' }"
+    (click)="setTabGender('femenino')"
+  >
+    Fútbol femenino
+  </button>
+</div>
+
+<div class="mt-3">
+  <ng-container *ngIf="activeTabGender === 'masculino'">
+    <p>Contenido de fútbol masculino</p>
+  </ng-container>
+
+  <ng-container *ngIf="activeTabGender === 'femenino'">
+    <p>Contenido de fútbol femenino</p>
+  </ng-container>
+</div> -->
+
+
+<!-- Contenido dinámico -->
+<div class="mt-4">
+  <app-volley-position-table *ngIf="activeTab === 'posTableView'"></app-volley-position-table>
+  <app-volley-bracket-view *ngIf="activeTab === 'bracketView'"></app-volley-bracket-view>
+</div>

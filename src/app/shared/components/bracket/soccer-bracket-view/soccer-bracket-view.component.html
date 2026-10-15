@@ -1,0 +1,135 @@
+<div class="bracket-page container rounded-4">
+  <div class="bracket-header" *ngIf="tournamentData">
+    <div class="bracket-header__sport">
+      {{ getSportLabel(tournamentData.sport) }}
+    </div>
+    <h2 class="bracket-header__title">{{ tournamentData.tournament_name }}</h2>
+    <span
+      class="bracket-header__status"
+      [ngClass]="'badge-' + tournamentData.status"
+    >
+      {{
+        tournamentData.status === 'in_progress'
+          ? 'En curso'
+          : tournamentData.status === 'finished'
+            ? 'Finalizado'
+            : tournamentData.status === 'pending'
+              ? 'Pendiente'
+              : tournamentData.status
+      }}
+    </span>
+  </div>
+
+  <div class="bracket-loading" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Cargando información...</p>
+  </div>
+
+  <div style="margin-right: 10px">
+    <select class="form-field__input" style="margin-right: 10px;" [(ngModel)]="tournamentId">
+      <option value="" disabled selected>Selecciona un equipo</option>
+      <option
+        *ngFor="let tournament of tournaments()"
+        value="{{ tournament.id }}"
+      >
+        {{ tournament.name }}
+      </option>
+    </select>
+    <button (click)="loadBracket()" class="btn btn-secondary">
+      Cargar
+    </button>
+  </div>
+
+  <div class="bracket-scroll" *ngIf="tournamentData && !loading">
+    <div class="bracket-container" #bracketContainer>
+      <svg class="bracket-lines" #linesOverlay></svg>
+
+      <div class="bracket-rounds">
+        <div class="bracket-round" *ngFor="let round of tournamentData.bracket">
+          <div class="round-title">{{ round.name }}</div>
+
+          <div class="round-content">
+            <ng-container *ngIf="round.pases_directos.length > 0">
+              <div class="bye-card" *ngFor="let bye of round.pases_directos">
+                <div class="bye-card__team">{{ bye.name }}</div>
+                <div class="bye-card__label">Pase directo</div>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="round.matches.length > 0; else emptyRound">
+              <div
+                class="match-card"
+                *ngFor="let match of round.matches"
+                [id]="nodeId(round.round_order, match.match_id)"
+                [ngClass]="getMatchStatusClass(match)"
+              >
+                <div class="match-card__header">
+                  <span
+                    class="match-card__status"
+                    [ngClass]="getMatchStatusClass(match)"
+                  >
+                    {{ getMatchStatusLabel(match) }}
+                  </span>
+                </div>
+
+                <div
+                  class="match-card__team"
+                  [class.match-card__team--winner]="
+                    isWinner(match, match.home.team_id)
+                  "
+                >
+                  <span class="match-card__team-name">
+                    {{ match.home.team_id ? match.home.name : 'TBD' }}
+                  </span>
+                  <span
+                    class="match-card__score"
+                    *ngIf="
+                      match.status === 'finished' ||
+                      match.status === 'in_progress'
+                    "
+                  >
+                    {{ match.home.score ?? 0 }}
+                  </span>
+                </div>
+
+                <div class="match-card__divider"></div>
+
+                <div
+                  class="match-card__team"
+                  [class.match-card__team--winner]="
+                    isWinner(match, match.away.team_id)
+                  "
+                >
+                  <span class="match-card__team-name">
+                    {{ match.away.team_id ? match.away.name : 'TBD' }}
+                  </span>
+                  <span
+                    class="match-card__score"
+                    *ngIf="
+                      match.status === 'finished' ||
+                      match.status === 'in_progress'
+                    "
+                  >
+                    {{ match.away.score ?? 0 }}
+                  </span>
+                </div>
+              </div>
+            </ng-container>
+
+            <ng-template #emptyRound>
+              <div class="match-card match-card--tbd">
+                <div class="match-card__team">
+                  <span class="match-card__team-name--tbd">TBD</span>
+                </div>
+                <div class="match-card__divider"></div>
+                <div class="match-card__team">
+                  <span class="match-card__team-name--tbd">TBD</span>
+                </div>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

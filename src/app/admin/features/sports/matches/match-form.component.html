@@ -1,0 +1,195 @@
+<div class="bracket-page container rounded-4">
+  <!-- Header -->
+  <div class="bracket-header" *ngIf="tournamentData">
+    <div class="bracket-header__sport">
+      {{ getSportLabel(tournamentData.sport) }}
+    </div>
+    <h2 class="bracket-header__title">{{ tournamentData.tournament_name }}</h2>
+    <span
+      class="bracket-header__status"
+      [ngClass]="'badge-' + tournamentData.status"
+    >
+      {{
+        tournamentData.status === 'in_progress'
+          ? 'En curso'
+          : tournamentData.status === 'finished'
+            ? 'Finalizado'
+            : tournamentData.status === 'pending'
+              ? 'Pendiente'
+              : tournamentData.status
+      }}
+    </span>
+  </div>
+
+  <!-- Loading -->
+  <div class="bracket-loading" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Cargando bracket...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="bracket-error" *ngIf="error && !loading">
+    <p>{{ error }}</p>
+    <button (click)="loadBracket()">Reintentar</button>
+  </div>
+
+  <!-- Bracket -->
+  <div class="bracket-scroll">
+    <div class="bracket-container" #bracketContainer>
+      <svg class="bracket-lines" #linesOverlay></svg>
+
+      <div class="bracket-rounds">
+        <div
+          class="bracket-round"
+          *ngFor="let round of tournamentData?.bracket"
+        >
+          <div class="round-title">{{ round.name }}</div>
+
+          <div class="round-content">
+            <!-- BYEs -->
+            <ng-container *ngIf="round.pases_directos.length > 0">
+              <div class="bye-card" *ngFor="let bye of round.pases_directos">
+                <div class="bye-card__team">{{ bye.name }}</div>
+                <div class="bye-card__label">Pase directo</div>
+              </div>
+            </ng-container>
+
+            <!-- Partidos -->
+            <ng-container *ngIf="round.matches.length > 0; else emptyRound">
+              <div
+                class="match-card"
+                *ngFor="let match of round.matches"
+                [id]="nodeId(round.round_order, match.match_id)"
+                [ngClass]="getMatchStatusClass(match)"
+              >
+                <!-- Header de la tarjeta -->
+                <div class="match-card__header">
+                  <span
+                    class="match-card__status"
+                    [ngClass]="getMatchStatusClass(match)"
+                  >
+                    {{ getMatchStatusLabel(match) }}
+                  </span>
+                  <!-- Botón editar — solo en partidos finalizados -->
+                  <button
+                    class="btn-edit"
+                    *ngIf="scores[match.match_id]?.isFinished"
+                    (click)="reopenMatch(match)"
+                    title="Editar resultado"
+                  >
+                    Editar
+                  </button>
+                </div>
+
+                <!-- ── MODO FINALIZADO: mostrar resultado ── -->
+                <ng-container *ngIf="scores[match.match_id]?.isFinished">
+                  <div
+                    class="match-card__team"
+                    [class.match-card__team--winner]="
+                      isWinner(match, match.home.team_id)
+                    "
+                    [class.match-card__team--loser]="
+                      match.winner_team_id &&
+                      !isWinner(match, match.home.team_id)
+                    "
+                  >
+                    <span class="match-card__team-name">{{
+                      match.home.team_id ? match.home.name : 'TBD'
+                    }}</span>
+                    <span class="match-card__score">{{
+                      scores[match.match_id].scoreHome ?? '-'
+                    }}</span>
+                  </div>
+                  <div class="match-card__divider"></div>
+                  <div
+                    class="match-card__team"
+                    [class.match-card__team--winner]="
+                      isWinner(match, match.away.team_id)
+                    "
+                    [class.match-card__team--loser]="
+                      match.winner_team_id &&
+                      !isWinner(match, match.away.team_id)
+                    "
+                  >
+                    <span class="match-card__team-name">{{
+                      match.away.team_id ? match.away.name : 'TBD'
+                    }}</span>
+                    <span class="match-card__score">{{
+                      scores[match.match_id].scoreAway ?? '-'
+                    }}</span>
+                  </div>
+                </ng-container>
+
+                <!-- ── MODO EDICIÓN: inputs de resultado ── -->
+                <ng-container *ngIf="!scores[match.match_id]?.isFinished">
+                  <!-- Equipo local con input -->
+                  <div class="match-card__team-input">
+                    <div class="match-card__team-info">
+                      <span class="match-card__team-name">{{
+                        match.home.team_id ? match.home.name : 'TBD'
+                      }}</span>
+                    </div>
+                    <input
+                      type="number"
+                      class="score-input"
+                      [(ngModel)]="scores[match.match_id].scoreHome"
+                      [disabled]="!hasBothTeams(match)"
+                      min="0"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div class="match-card__divider"></div>
+
+                  <!-- Equipo visitante con input -->
+                  <div class="match-card__team-input">
+                    <div class="match-card__team-info">
+                      <span class="match-card__team-name">{{
+                        match.away.team_id ? match.away.name : 'TBD'
+                      }}</span>
+                    </div>
+                    <input
+                      type="number"
+                      class="score-input"
+                      [(ngModel)]="scores[match.match_id].scoreAway"
+                      [disabled]="!hasBothTeams(match)"
+                      min="0"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <!-- Botón finalizar -->
+                  <button
+                    class="btn-finish"
+                    [class.btn-finish--active]="canFinish(match)"
+                    [disabled]="!canFinish(match)"
+                    (click)="finishMatch(match)"
+                  >
+                    Finalizar partido
+                  </button>
+                </ng-container>
+              </div>
+            </ng-container>
+
+            <!-- TBD -->
+            <ng-template #emptyRound>
+              <div class="match-card match-card--tbd">
+                <div class="match-card__team">
+                  <span class="match-card__team-name match-card__team-name--tbd"
+                    >TBD</span
+                  >
+                </div>
+                <div class="match-card__divider"></div>
+                <div class="match-card__team">
+                  <span class="match-card__team-name match-card__team-name--tbd"
+                    >TBD</span
+                  >
+                </div>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

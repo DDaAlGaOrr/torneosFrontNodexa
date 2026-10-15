@@ -1,0 +1,541 @@
+// ─── Variables ────────────────────────────────────────────────────────────────
+$accent:        #4f46e5;
+$accent-light:  #ede9fe;
+$accent-hover:  #f5f3ff;
+$accent-dark:   #4338ca;
+
+$text-primary:   #1a1d2e;
+$text-secondary: #8b8fa8;
+$text-muted:     #b0b3c6;
+
+$border:         #e8eaf0;
+$bg-page:        #f7f8fc;
+$bg-card:        #ffffff;
+
+$red:            #ef4444;
+$red-light:      #fff0f0;
+$green:          #22c55e;
+$green-light:    #f0fdf4;
+
+$font-sans: 'DM Sans', 'Segoe UI', sans-serif;
+$radius: 12px;
+$radius-sm: 8px;
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+.teams-page {
+  font-family: $font-sans;
+
+  &__header {
+    margin-bottom: 28px;
+    gap: 16px;
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+    color: $text-primary;
+    letter-spacing: -0.03em;
+    margin-bottom: 4px;
+  }
+
+  &__subtitle {
+    font-size: 13.5px;
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
+// ─── Register Button ──────────────────────────────────────────────────────────
+.btn-register {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: $accent;
+  color: #fff;
+  border: none;
+  border-radius: $radius-sm;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: $font-sans;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 8px rgba($accent, 0.3);
+
+  &:hover {
+    background: $accent-dark;
+    box-shadow: 0 4px 14px rgba($accent, 0.4);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    background: rgba(#fff, 0.2);
+    border-radius: 4px;
+  }
+}
+
+// ─── Card ─────────────────────────────────────────────────────────────────────
+.teams-card {
+  background: $bg-card;
+  border-radius: $radius;
+  border: 1px solid $border;
+  overflow: hidden;
+
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 24px;
+    border-bottom: 1px solid $border;
+  }
+
+  &__search-icon {
+    color: $text-muted;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  &__search-input {
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    padding: 9px 14px 9px 36px;
+    font-size: 13px;
+    color: $text-primary;
+    font-family: $font-sans;
+    width: 280px;
+    outline: none;
+    transition: border-color 0.15s ease;
+    background: $bg-page;
+    margin-left: -36px; // compensate icon spacing
+
+    &:focus {
+      border-color: $accent;
+      background: #fff;
+    }
+
+    &::placeholder { color: $text-muted; }
+  }
+}
+
+// corrección para el search con icono superpuesto
+.teams-card__search {
+  position: relative;
+
+  &-icon {
+    position: absolute;
+    left: 34px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  &-input {
+    margin-left: 0;
+    padding-left: 36px;
+    width: 280px;
+  }
+}
+
+// ─── Table ────────────────────────────────────────────────────────────────────
+.teams-table-wrapper {
+  overflow-x: auto;
+}
+
+.teams-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead tr {
+    border-bottom: 1px solid $border;
+  }
+
+  th {
+    padding: 12px 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: $text-muted;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  &__row {
+    border-bottom: 1px solid $border;
+    transition: background 0.12s ease;
+
+    &:last-child { border-bottom: none; }
+
+    &:hover { background: $accent-hover; }
+  }
+
+  td {
+    padding: 16px 20px;
+    font-size: 13.5px;
+    color: $text-primary;
+    vertical-align: middle;
+  }
+
+  &__id {
+    color: $text-secondary;
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  &__name {
+    font-weight: 600;
+  }
+
+  &__coach,
+  &__players {
+    color: darken($text-secondary, 5%);
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 48px 20px !important;
+    color: $text-muted;
+
+    svg { margin-bottom: 12px; stroke: $text-muted; display: block; margin-inline: auto; }
+    p { margin: 0; font-size: 13.5px; }
+  }
+}
+
+// ─── Status Badge ─────────────────────────────────────────────────────────────
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: $font-sans;
+  background: #f1f5f9;
+  color: $text-secondary;
+
+  &--active {
+    background: $green-light;
+    color: darken($green, 8%);
+    &::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: $green; display: inline-block; }
+  }
+
+  &--suspended {
+    background: #fff7ed;
+    color: #c2570a;
+    &::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #f97316; display: inline-block; }
+  }
+
+  &--disqualified {
+    background: $red-light;
+    color: darken($red, 8%);
+    &::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: $red; display: inline-block; }
+  }
+
+  &--inactive {
+    background: #f4f5f9;
+    color: $text-secondary;
+    &::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: $text-muted; display: inline-block; }
+  }
+}
+
+// ─── Action Buttons ───────────────────────────────────────────────────────────
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid $border;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &--edit {
+    color: $text-secondary;
+    &:hover {
+      background: $accent-light;
+      border-color: $accent;
+      color: $accent;
+    }
+  }
+
+  &--delete {
+    color: $text-secondary;
+    &:hover {
+      background: $red-light;
+      border-color: $red;
+      color: $red;
+    }
+  }
+}
+
+// ─── Modal ────────────────────────────────────────────────────────────────────
+.rmodal {
+  border: none;
+  border-radius: $radius;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 24px 24px 20px;
+    border-bottom: 1px solid $border;
+  }
+
+  &__header-icon {
+    width: 38px;
+    height: 38px;
+    background: $accent-light;
+    border-radius: $radius-sm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $accent;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  &__title {
+    font-size: 16px;
+    font-weight: 700;
+    color: $text-primary;
+    letter-spacing: -0.02em;
+    margin-bottom: 3px;
+  }
+
+  &__subtitle {
+    font-size: 12.5px;
+    color: $text-secondary;
+    margin: 0;
+  }
+
+  &__close {
+    margin-left: auto;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid $border;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: $text-secondary;
+    flex-shrink: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: $red-light;
+      border-color: $red;
+      color: $red;
+    }
+  }
+
+  &__body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 18px 24px;
+    border-top: 1px solid $border;
+    background: #fafbff;
+  }
+}
+
+// ─── Form Fields ──────────────────────────────────────────────────────────────
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &__label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $text-primary;
+    letter-spacing: 0.01em;
+  }
+
+  &__input {
+    border: 1.5px solid $border;
+    border-radius: $radius-sm;
+    padding: 10px 14px;
+    font-size: 13.5px;
+    color: $text-primary;
+    font-family: $font-sans;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    background: #fff;
+
+    &:focus {
+      border-color: $accent;
+      box-shadow: 0 0 0 3px rgba($accent, 0.1);
+    }
+
+    &::placeholder { color: $text-muted; }
+
+    // Remove number spinners
+    &[type='number']::-webkit-inner-spin-button,
+    &[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; }
+    &[type='number'] { -moz-appearance: textfield; }
+  }
+
+  &__error {
+    font-size: 11.5px;
+    color: $red;
+    font-weight: 500;
+  }
+
+  &--error &__input {
+    border-color: $red;
+    box-shadow: 0 0 0 3px rgba($red, 0.08);
+  }
+}
+
+// ─── Modal Buttons ────────────────────────────────────────────────────────────
+.btn-cancel {
+  padding: 9px 20px;
+  border-radius: $radius-sm;
+  border: 1.5px solid $border;
+  background: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: $font-sans;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: #f4f5f9;
+    border-color: darken($border, 8%);
+    color: $text-primary;
+  }
+}
+
+.btn-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 20px;
+  border-radius: $radius-sm;
+  border: none;
+  background: $accent;
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: $font-sans;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba($accent, 0.3);
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+
+  &:hover {
+    background: $accent-dark;
+    box-shadow: 0 4px 14px rgba($accent, 0.4);
+    transform: translateY(-1px);
+  }
+
+  &:active { transform: translateY(0); }
+
+  &--save {
+    background: #059669;
+    box-shadow: 0 2px 8px rgba(#059669, 0.3);
+    &:hover {
+      background: #047857;
+      box-shadow: 0 4px 14px rgba(#059669, 0.4);
+    }
+  }
+}
+
+// ─── Edit modal icon variant ──────────────────────────────────────────────────
+.rmodal__header-icon--edit {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.rmodal__title-team {
+  color: $accent;
+  font-weight: 600;
+}
+
+// ─── Status Selector ──────────────────────────────────────────────────────────
+.status-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.status-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: $radius-sm;
+  border: 1.5px solid $border;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: $font-sans;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+
+  &:hover { background: #f9fafb; }
+
+  .status-option__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: $text-muted;
+    flex-shrink: 0;
+    transition: background 0.15s ease;
+  }
+
+  // Active state per status
+  &--active[data-status="active"] {
+    border-color: $green;
+    background: $green-light;
+    color: darken($green, 10%);
+    .status-option__dot { background: $green; }
+  }
+
+  &--active[data-status="suspended"] {
+    border-color: #f97316;
+    background: #fff7ed;
+    color: #c2570a;
+    .status-option__dot { background: #f97316; }
+  }
+
+  &--active[data-status="disqualified"] {
+    border-color: $red;
+    background: $red-light;
+    color: darken($red, 8%);
+    .status-option__dot { background: $red; }
+  }
+
+  &--active[data-status="inactive"] {
+    border-color: $text-muted;
+    background: #f4f5f9;
+    color: $text-secondary;
+    .status-option__dot { background: $text-secondary; }
+  }
+}

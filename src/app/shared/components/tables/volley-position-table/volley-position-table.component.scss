@@ -1,0 +1,40 @@
+.tabla-wrapper {
+  overflow-x: auto;
+}
+
+.tabla-scroll {
+  min-width: 650px;
+}
+
+/* columnas fijas */
+.sticky-col {
+  position: sticky;
+  background-color: rgb(255, 255, 255);
+  left: 0;
+  background: inherit; // mantiene estilo Bootstrap
+}
+
+/* columna # */
+.col-pos {
+  width: 40px;
+  min-width: 40px;
+  left: 0;
+  z-index: 2;
+}
+
+/* columna equipo */
+.col-team {
+  min-width: 160px;
+  left: 40px;
+  z-index: 2;
+}
+
+/* asegurar encabezado por encima */
+thead .sticky-col {
+  background-color: rgb(255, 255, 255);
+  z-index: 3;
+}
+
+.table {
+  --bs-table-hover-bg: #dcdfffa3;
+}

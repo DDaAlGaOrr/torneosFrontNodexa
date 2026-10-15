@@ -1,0 +1,609 @@
+<div class="tournament-page">
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div
+    class="tournament-page__header d-flex align-items-start justify-content-between"
+  >
+    <div>
+      <h2 class="tournament-page__title">Soccer - Tabla de torneos</h2>
+      <p class="tournament-page__subtitle">
+        Registrar, actualizar y eliminar torneos de fútbol.
+      </p>
+    </div>
+    <button
+      class="btn-register"
+      data-bs-toggle="modal"
+      data-bs-target="#registerTournamentModal"
+    >
+      <span class="btn-register__icon">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      </span>
+      Registrar Nuevo Torneo
+    </button>
+  </div>
+
+  <!-- ── Table Card ───────────────────────────────────────────────────────── -->
+  <div class="tournament-card">
+    <!-- Search -->
+    <div class="tournament-card__search">
+      <span class="tournament-card__search-icon">
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+      </span>
+      <input
+        type="text"
+        class="tournament-card__search-input"
+        placeholder="Buscar torneo..."
+        [(ngModel)]="searchQuery"
+      />
+    </div>
+
+    <!-- Table -->
+    <div class="tournament-table-wrapper">
+      <table class="tournament-table">
+        <thead>
+          <tr>
+            <th>NUMERO</th>
+            <th>NOMBRE TORNEO</th>
+            <th>FECHA</th>
+            <th>ESTATUS</th>
+            <th class="text-end">ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let tournament of filteredtournament; let i = index"
+            class="tournament-table__row"
+          >
+            <td class="tournament-table__id">#{{ i + 1 }}</td>
+            <td class="tournament-table__name">{{ tournament.name }}</td>
+            <td class="tournament-table__coach">
+              {{ formatDateForInput(tournament.start_date) }}
+            </td>
+            <td class="tournament-table__coach">{{ tournament.status }}</td>
+            <td>
+              <div
+                class="tournament-table__actions d-flex justify-content-end gap-2"
+              >
+                <button
+                  class="action-btn action-btn--edit"
+                  aria-label="Edit"
+                  (click)="irAlTorneo(tournament.id)"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </button>
+
+                <button
+                  class="action-btn action-btn--edit"
+                  aria-label="Edit"
+                  (click)="openTournamentModal(tournament.id)"
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <!-- Clipboard -->
+                    <path
+                      d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+                    />
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                    <!-- Checkmark -->
+                    <polyline points="9 12 12 15 15 10" />
+                  </svg>
+                </button>
+                <button
+                  class="action-btn action-btn--edit"
+                  aria-label="Edit"
+                  (click)="openEditModal(tournament)"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+                    />
+                    <path
+                      d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+                    />
+                  </svg>
+                </button>
+                <button
+                  class="action-btn action-btn--delete"
+                  aria-label="Delete"
+                  (click)="deleteTournament(tournament.id)"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    <path d="M10 11v6M14 11v6" />
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Empty state -->
+          <tr *ngIf="filteredtournament.length === 0">
+            <td colspan="6" class="tournament-table__empty">
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <p>No se encontraron torneos</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Register New Team ════════════════════════════════════════════════ -->
+<div
+  class="modal fade"
+  id="registerTournamentModal"
+  tabindex="-1"
+  aria-labelledby="registerTournamentModalLabel"
+  aria-hidden="true"
+  (hidden.bs.modal)="resetRegisterForm()"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rmodal">
+      <!-- Header -->
+      <div class="rmodal__header">
+        <div class="rmodal__header-icon">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </div>
+        <div>
+          <h5 class="rmodal__title" id="registerTournamentModalLabel">
+            Registrar Nuevo Torneo
+          </h5>
+          <p class="rmodal__subtitle">
+            Completa los detalles para agregar nuevo torneo
+          </p>
+        </div>
+        <button
+          type="button"
+          class="rmodal__close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="rmodal__body">
+        <!-- Team Name -->
+        <div
+          class="form-field"
+          [class.form-field--error]="registerSubmitted && !registerForm.name"
+        >
+          <label class="form-field__label">Nombre del Torneo</label>
+          <input
+            type="text"
+            class="form-field__input"
+            placeholder="Torneo relampago"
+            [(ngModel)]="registerForm.name"
+          />
+          <span
+            class="form-field__error"
+            *ngIf="registerSubmitted && !registerForm.name"
+          >
+            El nombre del torneo es requerido.
+          </span>
+        </div>
+
+        <div
+          class="form-field"
+          [class.form-field--error]="
+            registerSubmitted && !registerForm.start_date
+          "
+        >
+          <label class="form-field__label">Fecha del Torneo</label>
+          <input
+            type="date"
+            class="form-field__input"
+            [(ngModel)]="registerForm.start_date"
+          />
+          <span
+            class="form-field__error"
+            *ngIf="registerSubmitted && !registerForm.start_date"
+          >
+            La fecha del torneo es requerida.
+          </span>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="rmodal__footer">
+        <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button type="button" class="btn-submit" (click)="registerTournament()">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Registrar Torneo
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Edit Team ════════════════════════════════════════════════════════ -->
+<div
+  class="modal fade"
+  id="editTournamentModal"
+  tabindex="-1"
+  aria-labelledby="editTournamentModal"
+  aria-hidden="true"
+  (hidden.bs.modal)="resetEditForm()"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rmodal">
+      <!-- Header -->
+      <div class="rmodal__header">
+        <div class="rmodal__header-icon rmodal__header-icon--edit">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path
+              d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+            />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+        </div>
+        <div>
+          <h5 class="rmodal__title" id="editTournamentModalLabel">
+            Editar torneo
+            <span *ngIf="editingTournament" class="rmodal__title-tournament"
+              >— {{ editingTournament.name }}</span
+            >
+          </h5>
+          <p class="rmodal__subtitle">Actualizar la información del torneo.</p>
+        </div>
+        <button
+          type="button"
+          class="rmodal__close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="rmodal__body">
+        <!-- Team Name -->
+        <div
+          class="form-field"
+          [class.form-field--error]="editSubmitted && !editForm.name"
+        >
+          <label class="form-field__label">Nombre del torneo</label>
+          <input
+            type="text"
+            class="form-field__input"
+            placeholder="e.g. Eagles"
+            [(ngModel)]="editForm.name"
+          />
+          <span
+            class="form-field__error"
+            *ngIf="editSubmitted && !editForm.name"
+          >
+            El nombre del torneo es requerido.
+          </span>
+        </div>
+
+        <div
+          class="form-field"
+          [class.form-field--error]="registerSubmitted && !editForm.start_date"
+        >
+          <label class="form-field__label">Fecha del Torneo</label>
+          <input
+            type="date"
+            class="form-field__input"
+            [(ngModel)]="editForm.start_date"
+          />
+          <span
+            class="form-field__error"
+            *ngIf="registerSubmitted && !editForm.start_date"
+          >
+            La fecha del torneo es requerida.
+          </span>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="rmodal__footer">
+        <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn-submit btn-submit--save"
+          (click)="saveChanges()"
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          Guardar Cambios
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  class="modal fade"
+  id="tournamentDetails"
+  tabindex="-1"
+  aria-labelledby="tournamentDetailsLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content rmodal">
+      <!-- Header -->
+      <div class="rmodal__header">
+        <div class="rmodal__header-icon">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </div>
+        <div>
+          <h5 class="rmodal__title" id="registerTournamentModalLabel">
+            Torneo {{ tournamentName }}
+          </h5>
+        </div>
+        <button
+          type="button"
+          class="rmodal__close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="rmodal__body">
+        <div class="form-field-group" style="display: flex">
+          <div style="margin-right: 10px">
+            <select class="form-field__input" [(ngModel)]="teamToRegister">
+              <option value="" disabled selected>Selecciona un equipo</option>
+              <option *ngFor="let team of teams()" value="{{ team.id }}">
+                {{ team.short_name + ' ' + team.name }}
+              </option>
+            </select>
+          </div>
+
+          <button (click)="registerTeam()" class="btn-submit">Inscribir</button>
+        </div>
+
+        <div class="tournament-card">
+          <!-- Table -->
+          <div class="tournament-table-wrapper">
+            <table class="tournament-table">
+              <thead>
+                <tr>
+                  <th>NUMERO</th>
+                  <th>NOMBRE DEL EQUIPO</th>
+                  <th>SEED</th>
+                  <th>ESTATUS INSCRIPCION</th>
+                  <th class="text-end">ACCIONES</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  *ngFor="let team of registeredTeams(); let i = index"
+                  class="tournament-table__row"
+                >
+                  <td class="tournament-table__id">#{{ i + 1 }}</td>
+                  <td class="tournament-table__name">
+                    {{ team.team_name }}
+                  </td>
+                  <td class="tournament-table__coach">
+                    {{ team.seed }}
+                  </td>
+                  <td class="tournament-table__coach">
+                    {{ team.inscription_status }}
+                  </td>
+                  <td>
+                    <div
+                      class="tournament-table__actions d-flex justify-content-end gap-2"
+                    >
+                      <button
+                        class="action-btn action-btn--delete"
+                        aria-label="Delete"
+                        (click)="unsubscribeTeam(team.team_id)"
+                      >
+                        <svg
+                          width="15"
+                          height="15"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <polyline points="3 6 5 6 21 6" />
+                          <path
+                            d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"
+                          />
+                          <path d="M10 11v6M14 11v6" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Empty state -->
+                <tr *ngIf="filteredtournament.length === 0">
+                  <td colspan="6" class="tournament-table__empty">
+                    <svg
+                      width="32"
+                      height="32"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    >
+                      <circle cx="11" cy="11" r="8" />
+                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <p>No se encontraron equipos</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="rmodal__footer">
+        <button type="button" class="btn-cancel" data-bs-dismiss="modal">
+          salir
+        </button>
+        <button type="button" class="btn-submit" (click)="generateRounds()">
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          crear partidos
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

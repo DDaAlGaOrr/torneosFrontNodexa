@@ -1,0 +1,19 @@
+<div class="tabs-container d-flex justify-content-center">
+  <div class="tabs-pill d-flex">
+
+    <button class="tab-btn" [class.active]="activeTab === 'posTableView'" (click)="setTab('posTableView')">
+      Tabla de posiciones
+    </button>
+
+    <button class="tab-btn" [class.active]="activeTab === 'bracketView'" (click)="setTab('bracketView')">
+      Brackets
+    </button>
+
+  </div>
+</div>
+
+<!-- Contenido dinámico -->
+<div class="mt-4">
+  <app-basket-position-table *ngIf="activeTab === 'posTableView'"></app-basket-position-table>
+  <app-basket-bracket-view *ngIf="activeTab === 'bracketView'"></app-basket-bracket-view>
+</div>

@@ -1,0 +1,26 @@
+<div class="login-container d-flex align-items-center justify-content-center">
+  <div class="login-card shadow-lg wrapper fadeInDown">
+
+    <div class="text-center mb-4">
+      <h3 class="fw-bold">Regístrate en los torneos deportivos</h3 >
+      <p class="text-muted">Por favor, inicie sesión en su cuenta</p>
+    </div>
+
+    <form [formGroup]="authForm" (ngSubmit)="onSubmited()">
+      <div class="mb-3">
+        <label for="username" class="form-label">Correo</label>
+        <input id="username" type="email" class="form-control custom-input" placeholder="ejemplo@email.com" formControlName="email" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Contraseña</label>
+        <input id="password" type="password" class="form-control custom-input" placeholder="••••••••" formControlName="password" required>
+      </div>
+      
+      <button [disabled]="!authForm.valid" type="submit" class="btn btn-login w-100">
+        Ingresar
+      </button>
+    </form>
+
+  </div>
+</div>

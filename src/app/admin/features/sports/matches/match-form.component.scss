@@ -1,0 +1,741 @@
+// .bracket-page {
+//   /* background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); */
+//   min-height: 100vh;
+//   font-family: 'Inter', system-ui, sans-serif;
+// }
+
+// .logo-circle {
+//   width: 50px;
+//   height: 50px;
+//   background: white;
+//   border-radius: 50%;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   font-size: 24px;
+// }
+
+// .bracket-container {
+//   overflow-x: auto;
+//   overflow-y: hidden;
+//   -webkit-overflow-scrolling: touch;
+//   &::-webkit-scrollbar {
+//     height: 8px;
+//   }
+//   &::-webkit-scrollbar-thumb {
+//     background-color: rgba(0,0,0,0.15);
+//     border-radius: 4px;
+//   }
+// }
+
+// /* .full-bracket {
+//   position: relative;
+//   min-width: max-content;
+// } */
+// .full-bracket {
+//   display: inline-block;
+//   position: relative;
+// }
+
+// .bracket-lines-overlay {
+//   position: absolute;
+//   top: 0;
+//   left: 0;
+//   width: 100%;
+//   height: 100%;
+//   pointer-events: none;
+//   z-index: 0;
+// }
+
+// .section-label {
+//   font-weight: 700;
+//   color: #334155;
+//   font-size: 14px;
+//   text-transform: uppercase;
+//   letter-spacing: 1px;
+//   padding: 8px 16px;
+//   margin-bottom: 8px;
+//   border-left: 4px solid #3b82f6;
+//   margin-top: 12px;
+
+//   &.loser-label {
+//     border-left-color: #ef4444;
+//     margin-top: 30px;
+//   }
+// }
+
+// /* A bracket row is one horizontal flex for a section */
+// .bracket-row {
+//   display: flex;
+//   flex-direction: row;
+//   align-items: stretch;
+//   min-height: 400px;
+// }
+
+// .winners-bracket {
+//   min-height: 450px;
+// }
+
+// .losers-bracket {
+//   min-height: 320px;
+// }
+
+// .round {
+//   width: 200px;
+//   display: flex;
+//   flex-direction: column;
+//   flex: 0 0 200px;
+//   z-index: 1;
+// }
+
+// .spacer-col {
+//   width: 60px;
+//   flex: 0 0 60px;
+// }
+
+// .round-title {
+//   text-align: center;
+//   font-weight: 700;
+//   color: #64748b;
+//   font-size: 12px;
+//   text-transform: uppercase;
+//   letter-spacing: 1px;
+//   margin-bottom: 16px;
+//   height: 18px;
+// }
+
+// .match-pair {
+//   position: relative;
+//   display: flex;
+//   flex-direction: column;
+// }
+
+// .match-node {
+//   position: relative;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   width: 100%;
+// }
+
+// .card-wrapper {
+//   position: relative;
+//   width: 180px;
+// }
+
+// .reset-label {
+//   font-size: 11px;
+// }
+
+// .trophy-img {
+//   max-height: 100%;
+//   height: 150px;
+// }
+
+// @media (max-width: 768px) {
+//   .bracket-page .header {
+//     padding-left: 1rem !important;
+//     padding-right: 1rem !important;
+//     h2 { font-size: 1.25rem; }
+//   }
+//   .bracket-container {
+//     padding: 1rem !important;
+//   }
+// }
+// ── Variables ──────────────────────────────────────────────────────────────
+$card-width    : 200px;
+$card-gap      : 32px;
+$round-gap     : 60px;
+$card-radius   : 10px;
+$border-color  : #e2e8f0;
+$text-primary  : #1e293b;
+$text-muted    : #94a3b8;
+$bg-card       : #ffffff;
+$bg-page       : #f8fafc;
+$color-live    : #22c55e;
+$color-winner  : #3b82f6;
+
+// ── Página ─────────────────────────────────────────────────────────────────
+.bracket-page {
+  background: $bg-page;
+  min-height: 100vh;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+// ── Header ─────────────────────────────────────────────────────────────────
+.bracket-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+
+  &__sport {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: $text-muted;
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0;
+  }
+
+  &__status {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+
+    &.badge-in_progress {
+      background: #dcfce7;
+      color: #166534;
+    }
+    &.badge-finished {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+    &.badge-pending,
+    &.badge-draft,
+    &.badge-registration {
+      background: #f1f5f9;
+      color: #475569;
+    }
+  }
+}
+
+// ── Loading / Error ────────────────────────────────────────────────────────
+.bracket-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 0;
+  color: $text-muted;
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 2.5px solid $border-color;
+    border-top-color: $color-winner;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+}
+
+.bracket-error {
+  text-align: center;
+  padding: 40px;
+  color: #ef4444;
+
+  button {
+    margin-top: 12px;
+    padding: 8px 20px;
+    border: 1px solid #ef4444;
+    border-radius: 6px;
+    background: transparent;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 14px;
+
+    &:hover { background: #fef2f2; }
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── Scroll wrapper ─────────────────────────────────────────────────────────
+.bracket-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 24px;
+}
+
+// ── Contenedor del bracket (position relative para SVG overlay) ────────────
+.bracket-container {
+  position: relative;
+  display: inline-block;
+  min-width: 100%;
+}
+
+// ── SVG overlay para líneas D3 ─────────────────────────────────────────────
+.bracket-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+// ── Rondas en fila horizontal ──────────────────────────────────────────────
+.bracket-rounds {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8rem;
+  padding: 16px 0;
+}
+
+// ── Ronda individual ───────────────────────────────────────────────────────
+.bracket-round {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  min-width: $card-width;
+  justify-content: center;
+}
+
+.round-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: $text-muted;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+// ── Contenido de la ronda (BYEs + partidos apilados con espacio) ───────────
+.round-content {
+  display: flex;
+  flex-direction: column;
+  gap: $card-gap;
+  width: 100%;
+}
+
+// ── Tarjeta de BYE ─────────────────────────────────────────────────────────
+.bye-card {
+  width: $card-width;
+  background: #f8fafc;
+  border: 1.5px dashed $border-color;
+  border-radius: $card-radius;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &__team {
+    font-size: 14px;
+    font-weight: 600;
+    color: $text-primary;
+  }
+
+  &__label {
+    font-size: 11px;
+    color: $color-winner;
+    font-weight: 500;
+    background: #eff6ff;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+}
+
+// ── Tarjeta de partido ─────────────────────────────────────────────────────
+.match-card {
+  width: $card-width;
+  background: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: $card-radius;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  transition: box-shadow 0.15s;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+
+  &--tbd {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  // Borde izquierdo según status
+  &.status-live    { border-left: 3px solid $color-live; }
+  &.status-finished { border-left: 3px solid #c7d2fe; }
+  &.status-scheduled { border-left: 3px solid $border-color; }
+
+  &__header {
+    padding: 6px 10px 4px;
+    border-bottom: 1px solid $border-color;
+  }
+
+  &__status {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+
+    &.status-live      { color: $color-live; }
+    &.status-finished  { color: #6366f1; }
+    &.status-scheduled { color: $text-muted; }
+    &.status-canceled  { color: #ef4444; }
+  }
+
+  &__team {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 10px;
+    transition: background 0.1s;
+
+    &--winner {
+      background: #f0f9ff;
+
+      .match-card__team-name { font-weight: 700; color: $text-primary; }
+      .match-card__score     { color: $color-winner; font-weight: 700; }
+    }
+
+    &--loser {
+      .match-card__team-name { color: $text-muted; }
+      .match-card__score     { color: $text-muted; }
+    }
+  }
+
+  &__team-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: $text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px;
+
+    &--tbd {
+      color: $text-muted;
+      font-style: italic;
+    }
+  }
+
+  &__score {
+    font-size: 15px;
+    font-weight: 600;
+    color: $text-primary;
+    min-width: 24px;
+    text-align: right;
+  }
+
+  &__divider {
+    height: 1px;
+    background: $border-color;
+    margin: 0 10px;
+  }
+}
+
+$card-width   : 200px;
+$card-gap     : 32px;
+$round-gap    : 60px;
+$card-radius  : 10px;
+$border-color : #e2e8f0;
+$text-primary : #1e293b;
+$text-muted   : #94a3b8;
+$bg-card      : #ffffff;
+$bg-page      : #f8fafc;
+$color-live   : #22c55e;
+$color-winner : #3b82f6;
+
+.bracket-page {
+  background: $bg-page;
+  min-height: 100vh;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────
+.bracket-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+
+  &__sport {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: $text-muted;
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0;
+  }
+
+  &__status {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+
+    &.badge-in_progress { background: #dcfce7; color: #166534; }
+    &.badge-finished    { background: #e0e7ff; color: #3730a3; }
+    &.badge-pending,
+    &.badge-draft,
+    &.badge-registration { background: #f1f5f9; color: #475569; }
+  }
+}
+
+// ── Loading / Error ───────────────────────────────────────────────────────
+.bracket-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 0;
+  color: $text-muted;
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 2.5px solid $border-color;
+    border-top-color: $color-winner;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+}
+
+.bracket-error {
+  text-align: center;
+  padding: 40px;
+  color: #ef4444;
+
+  button {
+    margin-top: 12px;
+    padding: 8px 20px;
+    border: 1px solid #ef4444;
+    border-radius: 6px;
+    background: transparent;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 14px;
+    &:hover { background: #fef2f2; }
+  }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+// ── Layout ────────────────────────────────────────────────────────────────
+.bracket-scroll    { overflow-x: auto; overflow-y: visible; padding-bottom: 24px; }
+.bracket-container { position: relative; display: inline-block; min-width: 100%; }
+.bracket-lines     { position: absolute; top: 0; left: 0; pointer-events: none; overflow: visible; }
+
+.bracket-rounds {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8rem;
+  padding: 16px 0;
+}
+
+.bracket-round {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: $card-width;
+  justify-content: center;
+}
+
+.round-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: $text-muted;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.round-content {
+  display: flex;
+  flex-direction: column;
+  gap: $card-gap;
+  width: 100%;
+}
+
+// ── BYE ───────────────────────────────────────────────────────────────────
+.bye-card {
+  width: $card-width;
+  background: #f8fafc;
+  border: 1.5px dashed $border-color;
+  border-radius: $card-radius;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &__team  { font-size: 14px; font-weight: 600; color: $text-primary; }
+  &__label { font-size: 11px; color: $color-winner; font-weight: 500;
+             background: #eff6ff; padding: 2px 8px; border-radius: 20px; }
+}
+
+// ── Match card ────────────────────────────────────────────────────────────
+.match-card {
+  width: $card-width;
+  background: $bg-card;
+  border: 1px solid $border-color;
+  border-radius: $card-radius;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  transition: box-shadow 0.15s;
+
+  &:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+  &--tbd  { opacity: 0.5; pointer-events: none; }
+
+  &.status-live     { border-left: 3px solid $color-live; }
+  &.status-finished { border-left: 3px solid #c7d2fe; }
+  &.status-scheduled { border-left: 3px solid $border-color; }
+
+  // Header
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px 4px;
+    border-bottom: 1px solid $border-color;
+  }
+
+  &__status {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+
+    &.status-live      { color: $color-live; }
+    &.status-finished  { color: #6366f1; }
+    &.status-scheduled { color: $text-muted; }
+    &.status-canceled  { color: #ef4444; }
+  }
+
+  // Fila de equipo — modo resultado
+  &__team {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 10px;
+
+    &--winner {
+      background: #f0f9ff;
+      .match-card__team-name { font-weight: 700; color: $text-primary; }
+      .match-card__score     { color: $color-winner; font-weight: 700; }
+    }
+
+    &--loser {
+      .match-card__team-name { color: $text-muted; }
+      .match-card__score     { color: $text-muted; }
+    }
+  }
+
+  // Fila de equipo — modo edición (con input)
+  &__team-input {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+  }
+
+  &__team-info { flex: 1; margin-right: 8px; overflow: hidden; }
+
+  &__team-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: $text-primary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    max-width: 120px;
+
+    &--tbd { color: $text-muted; font-style: italic; }
+  }
+
+  &__score {
+    font-size: 15px;
+    font-weight: 600;
+    color: $text-primary;
+    min-width: 24px;
+    text-align: right;
+  }
+
+  &__divider {
+    height: 1px;
+    background: $border-color;
+    margin: 0 10px;
+  }
+}
+
+// ── Input de score ────────────────────────────────────────────────────────
+.score-input {
+  width: 44px;
+  height: 32px;
+  text-align: center;
+  border: 1px solid $border-color;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-primary;
+  background: #f8fafc;
+  outline: none;
+  flex-shrink: 0;
+  transition: border-color 0.15s, background 0.15s;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  -moz-appearance: textfield;
+
+  &:focus {
+    border-color: $color-winner;
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(59,130,246,.15);
+  }
+
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+// ── Botón finalizar ───────────────────────────────────────────────────────
+.btn-finish {
+  display: block;
+  width: calc(100% - 20px);
+  margin: 8px 10px 10px;
+  padding: 7px 0;
+  border-radius: 8px;
+  border: 1px solid $border-color;
+  background: #f1f5f9;
+  color: $text-muted;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: not-allowed;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &--active {
+    background: $color-winner;
+    color: #fff;
+    border-color: $color-winner;
+    cursor: pointer;
+
+    &:hover  { background: #2563eb; border-color: #2563eb; }
+    &:active { transform: scale(0.98); }
+  }
+}
+
+// ── Botón editar ──────────────────────────────────────────────────────────
+.btn-edit {
+  font-size: 10px;
+  font-weight: 600;
+  color: $text-muted;
+  background: transparent;
+  border: 1px solid $border-color;
+  border-radius: 4px;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover { color: $color-winner; border-color: $color-winner; }
+}

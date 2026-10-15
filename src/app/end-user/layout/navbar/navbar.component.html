@@ -1,0 +1,16 @@
+<nav class="navbar glass-panel main-navbar mx-auto">
+        <div class="logo">
+          <a class="nav-link d-flex flex-row align-items-center gap-2" [routerLink]="['/']">
+            <img src="../../../../assets/images/trophy_logo.webp" alt="Trophy Logo" lazy="loading">
+            <span>Torneo 2026</span>
+          </a>
+        </div>
+        <ul class="nav-links mb-0">
+          <li *ngFor="let sport of sports" class="nav-item">
+            <a [routerLink]="[sport.route]" routerLinkActive="active" class="nav-link">{{ sport.label }}</a>
+          </li>
+        </ul>
+        <div class="user-profile d-none d-md-block">
+            <img src="../../../../assets/images/fesja_logo.webp" alt="Fesja Logo" lazy="loading">
+        </div>
+    </nav>

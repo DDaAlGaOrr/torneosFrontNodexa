@@ -1,0 +1,37 @@
+<div class="match-card shadow-sm bg-white" [class.finished]="match.isFinished" [class.championship]="match.isChampionship">
+  <div class="match-header d-flex justify-content-between align-items-center mb-2">
+    <div>
+      <div class="match-title">{{ match.isChampionship ? 'Campeonato' : 'Partido' }}</div>
+      <div class="match-subtitle text-muted">{{ match.isFinished ? 'Finalizado' : 'Pendiente' }}</div>
+    </div>
+    <div class="icon-play">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--bs-primary)" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 5v14l11-7z" />
+      </svg>
+    </div>
+  </div>
+
+  <div class="team-row d-flex align-items-center justify-content-between mb-2"
+       (click)="advance(match.team1 ?? null, true)"
+       [class.winner]="isWinner(match.score1, match.score2)"
+       [class.selectable]="!match.isFinished && match.team1 && match.team2">
+    <div class="d-flex align-items-center">
+      <div class="team-logo-placeholder me-2" *ngIf="isTBD1"></div>
+      <img *ngIf="!isTBD1" [src]="match.team1!.logoUrl" class="team-logo me-2" alt="logo">
+      <span class="team-name" [class.tbd]="isTBD1">{{ isTBD1 ? 'TBD' : match.team1!.name }}</span>
+    </div>
+    <span class="team-score fw-bold" [class.invisible]="match.score1 === null">{{ match.score1 }}</span>
+  </div>
+
+  <div class="team-row d-flex align-items-center justify-content-between"
+       (click)="advance(match.team2 ?? null, false)"
+       [class.winner]="isWinner(match.score1, match.score2)"
+       [class.selectable]="!match.isFinished && match.team1 && match.team2">
+    <div class="d-flex align-items-center">
+      <div class="team-logo-placeholder me-2" *ngIf="isTBD2"></div>
+      <img *ngIf="!isTBD2" [src]="match.team2!.logoUrl" class="team-logo me-2" alt="logo">
+      <span class="team-name" [class.tbd]="isTBD2">{{ isTBD2 ? 'TBD' : match.team2!.name }}</span>
+    </div>
+    <span class="team-score fw-bold" [class.invisible]="match.score2 === null">{{ match.score2 }}</span>
+  </div>
+</div>
