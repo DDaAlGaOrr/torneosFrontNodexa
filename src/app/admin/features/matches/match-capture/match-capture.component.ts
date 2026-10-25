@@ -20,6 +20,8 @@ import {
 import { CRUD_UI } from '../../../../core/ui/crud-ui';
 
 type Side = 'home' | 'away';
+/** Incidencias que se capturan desde el diálogo */
+type CaptureType = 'goal' | 'own_goal' | 'yellow_card' | 'red_card';
 
 const EVENT_META: Record<EventType, { icon: string; label: string }> = {
   goal: { icon: '⚽', label: 'Gol' },
@@ -60,19 +62,33 @@ export class MatchCaptureComponent implements OnInit, OnDestroy {
   error = signal('');
   /** Reloj para el minuto transcurrido y los descansos por amarilla */
   now = signal(Date.now());
-  /** Minuto escrito a mano; si está vacío se usa el minuto transcurrido */
-  minute: number | null = null;
-
-  // ── Diálogo de gol ────────────────────────────────────────────────────────
-  goalVisible = false;
-  goalSide = signal<Side>('home');
-  goalScorerId = signal<number | null>(null);
-  goalAssistId: number | null = null;
+  // ── Diálogo de incidencia (gol, autogol, tarjetas) ─────────────────────────
+  eventVisible = false;
+  eventType = signal<CaptureType>('goal');
+  eventSide = signal<Side>('home');
+  eventPlayerId = signal<number | null>(null);
+  eventAssistId: number | null = null;
+  /** Minuto de la incidencia; se propone el minuto transcurrido y es obligatorio */
+  eventMinute: number | null = null;
 
   // Opciones memorizadas: si se recalcularan en cada ciclo (el reloj corre cada segundo),
   // el dropdown se volvería a pintar y no dejaría seleccionar.
-  scorerOptions = computed(() => this.toOptions(this.players(this.goalSide())));
-  assistOptions = computed(() => this.toOptions(this.players(this.goalSide()).filter((p) => p.id !== this.goalScorerId())));
+  playerOptions = computed(() => {
+    const isCard = this.eventType() === 'yellow_card' || this.eventType() === 'red_card';
+    return this.toOptions(this.players(this.eventSide()).filter((p) => !isCard || !this.isExpelled(p)));
+  });
+  assistOptions = computed(() => this.toOptions(this.players(this.eventSide()).filter((p) => p.id !== this.eventPlayerId())));
+  /** La amarilla que se va a registrar sería la segunda del jugador (expulsión) */
+  secondYellow = computed(() => {
+    const id = this.eventPlayerId();
+    const p = this.players(this.eventSide()).find((x) => x.id === id);
+    return this.eventType() === 'yellow_card' && !!p && this.cardsInMatch(p, 'yellow_card') === 1;
+  });
+  /** Las tarjetas siempre son de un jugador; goles y autogoles pueden quedar sin identificar */
+  eventInvalid = computed(() => {
+    const isCard = this.eventType() === 'yellow_card' || this.eventType() === 'red_card';
+    return isCard && this.eventPlayerId() === null;
+  });
 
   // ── Diálogo de finalizar ──────────────────────────────────────────────────
   finishVisible = false;
@@ -118,7 +134,7 @@ export class MatchCaptureComponent implements OnInit, OnDestroy {
     this.load();
     this.clock = setInterval(() => this.now.set(Date.now()), 1000);
     this.poller = setInterval(() => {
-      if (this.match()?.status === 'in_progress' && !this.busy() && !this.goalVisible && !this.finishVisible) {
+      if (this.match()?.status === 'in_progress' && !this.busy() && !this.eventVisible && !this.finishVisible) {
         this.load(true);
       }
     }, POLL_MS);
@@ -162,9 +178,9 @@ export class MatchCaptureComponent implements OnInit, OnDestroy {
     return players.map((p) => ({ id: p.id, label: `${p.jersey_number ? '#' + p.jersey_number + ' ' : ''}${p.name}` }));
   }
 
-  setScorer(id: number | null): void {
-    this.goalScorerId.set(id);
-    if (id !== null && id === this.goalAssistId) this.goalAssistId = null;
+  setEventPlayer(id: number | null): void {
+    this.eventPlayerId.set(id);
+    if (id !== null && id === this.eventAssistId) this.eventAssistId = null;
   }
 
   /** Tarjetas del jugador en este partido */
@@ -194,20 +210,36 @@ export class MatchCaptureComponent implements OnInit, OnDestroy {
   }
 
   // ── Incidencias ───────────────────────────────────────────────────────────
-  openGoal(side: Side, scorer?: RosterPlayer): void {
-    this.goalSide.set(side);
-    this.goalScorerId.set(scorer?.id ?? null);
-    this.goalAssistId = null;
-    this.goalVisible = true;
+  /** Abre el diálogo de la incidencia con el minuto transcurrido ya propuesto */
+  openEvent(side: Side, type: CaptureType, player?: RosterPlayer): void {
+    this.eventType.set(type);
+    this.eventSide.set(side);
+    this.eventPlayerId.set(player?.id ?? null);
+    this.eventAssistId = null;
+    this.eventMinute = this.elapsed();
+    this.eventVisible = true;
   }
 
-  saveGoal(): void {
-    this.goalVisible = false;
-    this.register(this.goalSide(), 'goal', this.goalScorerId(), this.goalAssistId);
+  eventTitle(): string {
+    return { goal: 'Registrar gol', own_goal: 'Registrar autogol', yellow_card: 'Tarjeta amarilla', red_card: 'Tarjeta roja' }[this.eventType()];
   }
 
-  register(side: Side, type: EventType, playerId: number | null, assistId: number | null = null): void {
-    const minute = this.minute ?? this.elapsed();
+  /** Al abrir el diálogo el cursor queda en el minuto, con el valor seleccionado para sobrescribirlo */
+  focusMinute(): void {
+    setTimeout(() => {
+      const input = document.getElementById('ev-minute') as HTMLInputElement | null;
+      input?.focus();
+      input?.select();
+    });
+  }
+
+  saveEvent(): void {
+    if (this.eventMinute === null || this.eventInvalid()) return;
+    this.eventVisible = false;
+    this.register(this.eventSide(), this.eventType(), this.eventPlayerId(), this.eventMinute, this.eventAssistId);
+  }
+
+  private register(side: Side, type: EventType, playerId: number | null, minute: number, assistId: number | null = null): void {
     this.run(
       this.api.addEvent(this.matchId, {
         team_id: this.teamId(side),
@@ -218,23 +250,6 @@ export class MatchCaptureComponent implements OnInit, OnDestroy {
       }),
       `Registrado: ${EVENT_META[type].icon} ${EVENT_META[type].label}`,
     );
-  }
-
-  card(side: Side, p: RosterPlayer, type: 'yellow_card' | 'red_card'): void {
-    // La segunda amarilla del partido equivale a expulsión: se pide confirmación
-    if (type === 'yellow_card' && this.cardsInMatch(p, 'yellow_card') === 1) {
-      this.confirm.confirm({
-        header: 'Segunda amarilla',
-        message: `${p.name} ya tiene una amarilla. La segunda implica expulsión y sanción. ¿Registrarla?`,
-        icon: 'pi pi-exclamation-triangle',
-        acceptLabel: 'Registrar',
-        rejectLabel: 'Cancelar',
-        rejectButtonStyleClass: 'p-button-text',
-        accept: () => this.register(side, type, p.id),
-      });
-      return;
-    }
-    this.register(side, type, p.id);
   }
 
   removeEvent(e: MatchEvent): void {
@@ -286,7 +301,6 @@ export class MatchCaptureComponent implements OnInit, OnDestroy {
     request.subscribe({
       next: () => {
         this.busy.set(false);
-        this.minute = null;
         this.toast.add({ severity: 'success', summary: okMessage, life: 2500 });
         this.load(true);
       },

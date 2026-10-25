@@ -50,6 +50,10 @@
           <td>
             <div class="crud-actions">
               <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" pTooltip="Editar" tooltipPosition="top" ariaLabel="Editar" (onClick)="openEdit(u)" />
+              <p-button icon="pi pi-id-card" [rounded]="true" [text]="true" ariaLabel="Cambiar rol" [disabled]="u.id === currentUserId"
+                [pTooltip]="u.id === currentUserId ? 'No puedes cambiar tu propio rol' : 'Cambiar rol'" tooltipPosition="top" (onClick)="openRole(u)" />
+              <p-button icon="pi pi-key" [rounded]="true" [text]="true" pTooltip="Restablecer contraseña" tooltipPosition="top"
+                ariaLabel="Restablecer contraseña" (onClick)="openPassword(u)" />
               <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" ariaLabel="Eliminar"
                 [disabled]="u.id === currentUserId"
                 [pTooltip]="u.id === currentUserId ? 'No puedes eliminar tu propia cuenta' : 'Eliminar'" tooltipPosition="top"
@@ -100,5 +104,40 @@
   <ng-template pTemplate="footer">
     <p-button label="Cancelar" [text]="true" (onClick)="dialogVisible = false" />
     <p-button [label]="editing ? 'Guardar cambios' : 'Crear usuario'" icon="pi pi-check" [loading]="saving()" (onClick)="save()" />
+  </ng-template>
+</p-dialog>
+
+<!-- ══ Diálogo: cambiar rol ═════════════════════════════════════════════════ -->
+<p-dialog [(visible)]="roleVisible" header="Cambiar rol" [modal]="true" [draggable]="false" [style]="{ width: '420px', maxWidth: '95vw' }">
+  <div class="form-grid" *ngIf="roleUser">
+    <p class="form-grid__full m-0"><strong>{{ roleUser.name }}</strong> es {{ currentTab().singular }}.</p>
+    <div class="form-grid__full">
+      <label for="u-role">Nuevo rol</label>
+      <p-dropdown inputId="u-role" [options]="roleOptions()" optionLabel="label" optionValue="value" [(ngModel)]="newRole"
+        placeholder="Elige el rol" appendTo="body" />
+    </div>
+    <p class="crud-hint form-grid__full" *ngIf="roleWarning()">{{ roleWarning() }}</p>
+  </div>
+  <div class="form-alert" *ngIf="roleError()" role="alert">{{ roleError() }}</div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="roleVisible = false" />
+    <p-button label="Cambiar rol" icon="pi pi-check" [loading]="saving()" [disabled]="!newRole" (onClick)="saveRole()" />
+  </ng-template>
+</p-dialog>
+
+<!-- ══ Diálogo: restablecer contraseña ══════════════════════════════════════ -->
+<p-dialog [(visible)]="passVisible" header="Restablecer contraseña" [modal]="true" [draggable]="false" [style]="{ width: '420px', maxWidth: '95vw' }">
+  <div class="form-grid" *ngIf="passUser">
+    <p class="form-grid__full m-0">Asigna una contraseña nueva para <strong>{{ passUser.name }}</strong> ({{ passUser.email }}).</p>
+    <div class="form-grid__full">
+      <label for="u-newpass">Nueva contraseña</label>
+      <p-password inputId="u-newpass" [(ngModel)]="newPassword" [feedback]="false" [toggleMask]="true" placeholder="Mínimo 8 caracteres"
+        (keyup.enter)="savePassword()" />
+    </div>
+  </div>
+  <div class="form-alert" *ngIf="passError()" role="alert">{{ passError() }}</div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="passVisible = false" />
+    <p-button label="Guardar contraseña" icon="pi pi-check" [loading]="saving()" (onClick)="savePassword()" />
   </ng-template>
 </p-dialog>

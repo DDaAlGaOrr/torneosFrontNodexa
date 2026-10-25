@@ -1,0 +1,167 @@
+$border: #e8eaf0;
+$text-secondary: #8b8fa8;
+
+.myteam-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 16px;
+  text-align: center;
+  color: $text-secondary;
+
+  i {
+    font-size: 32px;
+    color: #4f46e5;
+  }
+}
+
+.myteam-alert {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 14px;
+
+  i {
+    margin-top: 2px;
+  }
+
+  ul {
+    margin: 4px 0 0;
+    padding-left: 18px;
+  }
+}
+
+.myteam-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.myteam-card {
+  padding-bottom: 8px;
+
+  &--wide {
+    grid-column: 1 / -1;
+  }
+
+  &__header {
+    padding: 12px 16px;
+    border-bottom: 1px solid $border;
+  }
+
+  &__empty {
+    margin: 0;
+    padding: 16px;
+  }
+
+  .crud-hint {
+    padding: 0 16px;
+  }
+}
+
+.myteam-table-wrap {
+  overflow-x: auto;
+}
+
+.myteam-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+
+  th,
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid $border;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  th {
+    font-size: 11.5px;
+    color: $text-secondary;
+    text-transform: uppercase;
+  }
+
+  th:first-child,
+  td:first-child {
+    text-align: left;
+    white-space: normal;
+  }
+}
+
+.myteam-pos {
+  font-weight: 700;
+  color: #4f46e5;
+}
+
+.myteam-match {
+  padding: 10px 16px;
+  border-bottom: 1px solid $border;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &__main {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 12px;
+    margin-top: 4px;
+    font-size: 12.5px;
+
+    i {
+      margin-right: 3px;
+    }
+  }
+}
+
+.res {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+
+  &--win {
+    background: #10b981;
+  }
+
+  &--draw {
+    background: #9ca3af;
+  }
+
+  &--loss {
+    background: #ef4444;
+  }
+}
+
+.myteam-data {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 8px 12px;
+  margin: 0;
+  padding: 12px 16px;
+  font-size: 14px;
+
+  dt {
+    color: $text-secondary;
+  }
+
+  dd {
+    margin: 0;
+  }
+}

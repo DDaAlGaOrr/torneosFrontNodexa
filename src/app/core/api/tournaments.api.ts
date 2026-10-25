@@ -45,6 +45,7 @@ export interface Enrollment {
   name: string;
   short_name: string | null;
   logo_url: string | null;
+  primary_color: string | null;
   payment_status: 'pending' | 'partial' | 'paid' | null;
   enrollment_status: 'pending' | 'confirmed' | 'withdrawn';
 }

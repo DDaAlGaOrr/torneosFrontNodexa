@@ -1,0 +1,210 @@
+<!-- Fila de partido (compartida por las listas) -->
+<ng-template #matchRow let-m let-showDay="showDay">
+  <button type="button" class="dmatch" [class.dmatch--flash]="flashed().has(m.id)" [class.dmatch--live]="m.status === 'in_progress'"
+    (click)="openMatch(m)">
+    <span class="dmatch__when">
+      <ng-container *ngIf="m.status === 'in_progress'; else timeTpl"><span class="match-live-dot"></span></ng-container>
+      <ng-template #timeTpl>
+        <small *ngIf="showDay">{{ day(m.scheduled_local) }}</small>
+        <span>{{ time(m.scheduled_local) }}</span>
+      </ng-template>
+    </span>
+    <span class="dmatch__teams">
+      <span class="dmatch__team" [class.dmatch__team--win]="winnerIs(m, 'home')">
+        <span class="crud-swatch" [style.background]="m.home_color || '#d1d5db'"></span>{{ m.home_team || 'Por definir' }}
+      </span>
+      <span class="dmatch__team" [class.dmatch__team--win]="winnerIs(m, 'away')">
+        <span class="crud-swatch" [style.background]="m.away_color || '#d1d5db'"></span>{{ m.away_team || 'Por definir' }}
+      </span>
+    </span>
+    <span class="dmatch__score" *ngIf="m.status === 'in_progress' || m.status === 'finished'; else noScore">
+      <span>{{ m.score_home }}</span><span>{{ m.score_away }}</span>
+      <small *ngIf="m.penalties_home !== null">({{ m.penalties_home }}–{{ m.penalties_away }} pen.)</small>
+    </span>
+    <ng-template #noScore>
+      <span class="dmatch__score dmatch__score--tag">
+        <p-tag *ngIf="m.status !== 'scheduled'" [value]="statusLabel(m.status)" [severity]="statusSeverity(m.status)" />
+      </span>
+    </ng-template>
+    <span class="dmatch__meta">{{ m.tournament_name }} · {{ m.round_name }}<ng-container *ngIf="m.field_name"> · {{ m.field_name }}</ng-container></span>
+  </button>
+</ng-template>
+
+<div class="crud-page dash">
+  <div class="crud-page__header">
+    <div>
+      <h2 class="crud-page__title">Dashboard</h2>
+      <p class="crud-page__subtitle">
+        <span class="dash-live" [class.dash-live--on]="live.status() === 'live'" [attr.aria-live]="'polite'">
+          <span class="dash-live__dot"></span>{{ liveLabel() }}
+        </span>
+        <ng-container *ngIf="lastUpdate()"> · actualizado {{ lastUpdate() | date: 'HH:mm:ss' }}</ng-container>
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-2 align-items-center">
+      <p-dropdown [options]="tournamentOptions()" optionLabel="name" optionValue="id" [ngModel]="selected"
+        (ngModelChange)="changeTournament($event)" [filter]="(data()?.tournaments?.length ?? 0) > 8" filterBy="name"
+        styleClass="dash-select" ariaLabel="Torneo" />
+      <p-button icon="pi pi-refresh" [outlined]="true" pTooltip="Actualizar" ariaLabel="Actualizar" (onClick)="load(true)" />
+    </div>
+  </div>
+
+  <div class="crud-alert" *ngIf="error()" role="alert">
+    <span>{{ error() }}</span>
+    <button type="button" aria-label="Reintentar" (click)="load()">↻</button>
+  </div>
+  <p class="crud-muted" *ngIf="loading() && !data()">Cargando...</p>
+
+  <ng-container *ngIf="data() as d">
+    <!-- ══ Indicadores ════════════════════════════════════════════════════ -->
+    <div class="kpis">
+      <div class="crud-card kpi">
+        <span class="kpi__label"><i class="pi pi-trophy"></i> Torneos activos</span>
+        <strong>{{ d.scope.tournaments_count }}</strong>
+        <small class="crud-muted">{{ progress() }}% de partidos jugados</small>
+        <div class="kpi__bar"><span [style.width.%]="progress()"></span></div>
+      </div>
+      <a class="crud-card kpi kpi--link" routerLink="/admin/equipos">
+        <span class="kpi__label"><i class="pi pi-shield"></i> Equipos</span>
+        <strong>{{ d.counters.teams_enrolled }}</strong>
+        <small class="crud-muted">inscritos · {{ d.counters.teams_total }} registrados en la liga</small>
+      </a>
+      <div class="crud-card kpi">
+        <span class="kpi__label"><i class="pi pi-users"></i> Jugadores</span>
+        <strong>{{ d.counters.players_enrolled }}</strong>
+        <small class="crud-muted">en torneos · {{ d.counters.players_total }} en la liga</small>
+      </div>
+      <div class="crud-card kpi">
+        <span class="kpi__label"><i class="pi pi-calendar"></i> Partidos de hoy</span>
+        <strong>{{ d.counters.today_total }}</strong>
+        <small class="crud-muted">
+          {{ d.counters.today_finished }} jugados<ng-container *ngIf="d.counters.live"> · <span class="match-live">{{ d.counters.live }} en juego</span></ng-container>
+        </small>
+      </div>
+      <div class="crud-card kpi">
+        <span class="kpi__label">⚽ Goles</span>
+        <strong>{{ d.counters.goals }}</strong>
+        <small class="crud-muted">🟨 {{ d.counters.yellow_cards }} · 🟥 {{ d.counters.red_cards }}</small>
+      </div>
+      <a class="crud-card kpi kpi--link" [class.kpi--alert]="d.counters.pending_sanctions > 0"
+        [routerLink]="d.featured ? ['/admin/torneos', d.featured.tournament_id, 'estadisticas'] : null">
+        <span class="kpi__label"><i class="pi pi-ban"></i> Sanciones pendientes</span>
+        <strong>{{ d.counters.pending_sanctions }}</strong>
+        <small class="crud-muted" *ngIf="d.counters.unscheduled">{{ d.counters.unscheduled }} partidos sin fecha</small>
+      </a>
+    </div>
+
+    <!-- ══ En vivo ═══════════════════════════════════════════════════════ -->
+    <section class="crud-card dsection dsection--live" *ngIf="d.live.length">
+      <header class="dsection__header"><span class="crud-strong"><span class="match-live-dot"></span> En vivo ahora</span></header>
+      <div class="dlist">
+        <ng-container *ngFor="let m of d.live; trackBy: trackMatch">
+          <ng-container *ngTemplateOutlet="matchRow; context: { $implicit: m, showDay: false }"></ng-container>
+        </ng-container>
+      </div>
+    </section>
+
+    <div class="dgrid">
+      <!-- Partidos de hoy -->
+      <section class="crud-card dsection">
+        <header class="dsection__header"><span class="crud-strong">Partidos de hoy</span><span class="crud-muted">{{ d.today.length }}</span></header>
+        <p class="crud-muted dsection__empty" *ngIf="!d.today.length">No hay partidos programados para hoy.</p>
+        <div class="dlist">
+          <ng-container *ngFor="let m of d.today; trackBy: trackMatch">
+            <ng-container *ngTemplateOutlet="matchRow; context: { $implicit: m, showDay: false }"></ng-container>
+          </ng-container>
+        </div>
+      </section>
+
+      <!-- Próximos -->
+      <section class="crud-card dsection">
+        <header class="dsection__header"><span class="crud-strong">Próximos 7 días</span><span class="crud-muted">{{ d.upcoming.length }}</span></header>
+        <p class="crud-muted dsection__empty" *ngIf="!d.upcoming.length">Sin partidos en los próximos días.</p>
+        <div class="dlist">
+          <ng-container *ngFor="let m of d.upcoming; trackBy: trackMatch">
+            <ng-container *ngTemplateOutlet="matchRow; context: { $implicit: m, showDay: true }"></ng-container>
+          </ng-container>
+        </div>
+      </section>
+
+      <!-- Últimos resultados -->
+      <section class="crud-card dsection">
+        <header class="dsection__header"><span class="crud-strong">Últimos resultados</span></header>
+        <p class="crud-muted dsection__empty" *ngIf="!d.recent.length">Todavía no hay partidos jugados.</p>
+        <div class="dlist">
+          <ng-container *ngFor="let m of d.recent; trackBy: trackMatch">
+            <ng-container *ngTemplateOutlet="matchRow; context: { $implicit: m, showDay: true }"></ng-container>
+          </ng-container>
+        </div>
+      </section>
+
+      <!-- Tabla rápida -->
+      <section class="crud-card dsection">
+        <header class="dsection__header">
+          <span class="crud-strong">Tabla rápida</span>
+          <a *ngIf="d.featured" class="crud-link dsection__link" [routerLink]="['/admin/torneos', d.featured.tournament_id, 'estadisticas']">Ver todo</a>
+        </header>
+        <p class="crud-muted dsection__empty" *ngIf="!d.featured">Sin torneos activos.</p>
+        <ng-container *ngIf="d.featured as f">
+          <p class="crud-muted dsection__sub">{{ f.tournament_name }}</p>
+          <div class="qtable" *ngFor="let g of f.table">
+            <div class="qtable__group" *ngIf="g.group_name">{{ g.group_name }}</div>
+            <div class="qtable__row qtable__row--head"><span>#</span><span>Equipo</span><span>PJ</span><span>DG</span><span>Pts</span></div>
+            <div class="qtable__row" *ngFor="let s of g.standings">
+              <span class="qtable__pos">{{ s.position }}</span><span class="qtable__name">{{ s.team_name }}</span>
+              <span>{{ s.PJ }}</span><span>{{ s.DG > 0 ? '+' + s.DG : s.DG }}</span><strong>{{ s.Puntos }}</strong>
+            </div>
+            <div class="crud-muted qtable__more" *ngIf="g.total > g.standings.length">+{{ g.total - g.standings.length }} equipos más</div>
+          </div>
+        </ng-container>
+      </section>
+
+      <!-- Próximas eliminatorias -->
+      <section class="crud-card dsection">
+        <header class="dsection__header">
+          <span class="crud-strong">Próximas eliminatorias</span>
+          <a *ngIf="d.knockouts.length" class="crud-link dsection__link" [routerLink]="['/admin/torneos', d.knockouts[0].tournament_id, 'llaves']">Ver cuadro</a>
+        </header>
+        <p class="crud-muted dsection__empty" *ngIf="!d.knockouts.length">No hay partidos de eliminatoria pendientes.</p>
+        <div class="dlist">
+          <ng-container *ngFor="let m of d.knockouts; trackBy: trackMatch">
+            <ng-container *ngTemplateOutlet="matchRow; context: { $implicit: m, showDay: true }"></ng-container>
+          </ng-container>
+        </div>
+      </section>
+
+      <!-- Estadísticas generales -->
+      <section class="crud-card dsection">
+        <header class="dsection__header"><span class="crud-strong">Estadísticas</span></header>
+        <div class="dstats">
+          <div>
+            <h4 class="dstats__title">Goleadores</h4>
+            <p class="crud-muted m-0" *ngIf="!d.top_scorers.length">Sin goles todavía.</p>
+            <div class="dscorer" *ngFor="let s of d.top_scorers; let i = index">
+              <span class="dscorer__pos">{{ i + 1 }}</span>
+              <span class="dscorer__name">{{ s.player_name }} <small class="crud-muted">{{ s.team_name }}</small></span>
+              <strong>{{ s.goals }}</strong>
+            </div>
+          </div>
+          <div *ngIf="d.featured?.highlights as h">
+            <h4 class="dstats__title">Destacados</h4>
+            <div class="dhl" *ngIf="h.most_goals">🔥 Más goleador: <strong>{{ h.most_goals.team_name }}</strong> ({{ h.most_goals.GF }})</div>
+            <div class="dhl" *ngIf="h.least_conceded">🧱 Menos goleado: <strong>{{ h.least_conceded.team_name }}</strong> ({{ h.least_conceded.GC }})</div>
+            <div class="dhl" *ngIf="h.fair_play">🤝 Fair play: <strong>{{ h.fair_play.team_name }}</strong> ({{ h.fair_play.fair_play }} pts)</div>
+            <p class="crud-muted m-0" *ngIf="!h.most_goals">Aún no hay partidos jugados.</p>
+          </div>
+        </div>
+        <div class="dbars" *ngIf="d.featured?.goals_per_round?.length">
+          <h4 class="dstats__title">Goles por jornada · {{ d.featured!.tournament_name }}</h4>
+          <div class="dbars__chart" role="img" [attr.aria-label]="'Goles por jornada'">
+            <div class="dbars__col" *ngFor="let r of d.featured!.goals_per_round" [pTooltip]="r.round_name + ': ' + r.goals + ' goles en ' + r.matches + ' partidos'">
+              <span class="dbars__value">{{ r.goals }}</span>
+              <span class="dbars__bar" [style.height.%]="(r.goals / maxGoalsPerRound()) * 100"></span>
+              <span class="dbars__label">{{ r.round_name.replace('Jornada ', 'J') }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </ng-container>
+</div>

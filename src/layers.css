@@ -1,6 +1,11 @@
 /*
- * Orden de prioridad de las capas CSS (de menor a mayor). Debe cargarse antes que cualquier otro estilo.
- * PrimeNG 16.9+ publica sus estilos dentro de @layer primeng; los estilos sin capa siempre ganan a los
- * que están en una capa. Por eso el reset global vive en "reset", por debajo de PrimeNG.
+ * Orden de prioridad de las capas CSS (de menor a mayor). Debe ser el PRIMER estilo de project.json:
+ * el navegador fija el orden de las capas la primera vez que aparece cada nombre.
+ *
+ * PrimeNG 16.9+ publica sus estilos dentro de @layer primeng, y los estilos sin capa siempre ganan a los
+ * que están en una capa. Por eso:
+ *  - el reset global vive en "reset" (ver styles.scss),
+ *  - Bootstrap se carga dentro de "bootstrap" (ver bootstrap-layer.css): así sus reglas de <a>, <button>,
+ *    <th>... no pisan a los componentes de PrimeNG (pestañas, menús, botones-enlace).
  */
-@layer reset, primeng;
+@layer reset, bootstrap, primeng;

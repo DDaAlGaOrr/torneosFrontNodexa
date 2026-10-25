@@ -1,0 +1,63 @@
+<p-sidebar [(visible)]="visible" (visibleChange)="onVisibleChange($event)" position="right" styleClass="player-drawer" [blockScroll]="true">
+  <ng-template pTemplate="header">
+    <span class="pd-title">Ficha del jugador</span>
+  </ng-template>
+
+  <p class="pd-muted" *ngIf="loading()">Cargando...</p>
+  <p class="pd-error" *ngIf="error()">{{ error() }}</p>
+
+  <ng-container *ngIf="data() as d">
+    <header class="pd-head">
+      <span class="pd-number" [style.background]="d.player.team_color || '#4f46e5'">{{ d.player.jersey_number || '—' }}</span>
+      <div>
+        <h3 class="pd-name">{{ d.player.name }}</h3>
+        <div class="pd-muted">
+          {{ d.player.position || 'Sin posición' }} · {{ d.player.team_name }}
+          <p-tag *ngIf="d.player.is_captain" value="Capitán" severity="info" />
+          <p-tag *ngIf="d.player.status !== 'active'" [value]="d.player.status === 'suspended' ? 'Suspendido' : 'Inactivo'" severity="warning" />
+        </div>
+      </div>
+    </header>
+
+    <div class="pd-totals">
+      <div><strong>{{ d.totals.goals }}</strong><span>Goles</span></div>
+      <div><strong>{{ d.totals.assists }}</strong><span>Asistencias</span></div>
+      <div><strong>{{ d.totals.yellow_cards }}</strong><span>Amarillas</span></div>
+      <div><strong>{{ d.totals.red_cards }}</strong><span>Rojas</span></div>
+    </div>
+
+    <section class="pd-section" *ngIf="d.tournaments.length">
+      <h4>Por torneo</h4>
+      <table class="pd-table">
+        <thead><tr><th>Torneo</th><th>⚽</th><th>🅰️</th><th>🟨</th><th>🟥</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let t of d.tournaments">
+            <td>{{ t.tournament_name }}</td><td>{{ t.goals }}</td><td>{{ t.assists }}</td><td>{{ t.yellow_cards }}</td><td>{{ t.red_cards }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="pd-section" *ngIf="d.sanctions.length">
+      <h4>Sanciones</h4>
+      <div class="pd-row" *ngFor="let s of d.sanctions">
+        <span>{{ s.reason }} · {{ s.matches_suspended }} partido(s) <span class="pd-muted">— {{ s.tournament_name }}</span></span>
+        <p-tag [value]="sanctionStatus[s.status].label" [severity]="sanctionStatus[s.status].severity" />
+      </div>
+    </section>
+
+    <section class="pd-section">
+      <h4>Goles y tarjetas</h4>
+      <p class="pd-muted" *ngIf="!d.events.length">Todavía no tiene goles, asistencias ni tarjetas.</p>
+      <div class="pd-row" *ngFor="let e of d.events">
+        <span>
+          {{ eventIcon(e) }} {{ eventLabel(e) }}<ng-container *ngIf="e.minute !== null"> {{ e.minute }}'</ng-container>
+          vs {{ e.rival_name || 'Por definir' }}
+        </span>
+        <span class="pd-muted">{{ e.round_name }} · {{ formatDay(e.scheduled_local) }}</span>
+      </div>
+    </section>
+
+    <p class="pd-muted pd-note">No se registran alineaciones, así que no hay partidos ni minutos jugados por jugador.</p>
+  </ng-container>
+</p-sidebar>

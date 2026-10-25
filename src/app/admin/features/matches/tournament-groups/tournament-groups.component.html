@@ -1,0 +1,141 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<!-- Fila de equipo (compartida por grupos y bandeja) -->
+<ng-template #teamRow let-t let-showStats="showStats">
+  <div class="gteam">
+    <span class="gteam__handle"><i class="pi pi-bars"></i></span>
+    <span class="gteam__pos" *ngIf="showStats">{{ stat(t.team_id)?.position ?? '—' }}</span>
+    <span class="crud-swatch" [style.background]="t.primary_color || '#d1d5db'"></span>
+    <span class="gteam__name">{{ t.name }}</span>
+    <ng-container *ngIf="showStats && stat(t.team_id) as s">
+      <span class="gteam__num" pTooltip="Partidos jugados">{{ s.PJ }}</span>
+      <span class="gteam__num" pTooltip="Diferencia de goles">{{ s.DG > 0 ? '+' + s.DG : s.DG }}</span>
+      <span class="gteam__num gteam__num--pts" pTooltip="Puntos">{{ s.Puntos }}</span>
+    </ng-container>
+  </div>
+</ng-template>
+
+<div class="crud-page">
+  <a class="crud-back" routerLink="/admin/torneos"><i class="pi pi-arrow-left"></i> Volver a torneos</a>
+
+  <div class="crud-page__header">
+    <div>
+      <h2 class="crud-page__title">{{ tournament()?.name || 'Grupos' }}</h2>
+      <p class="crud-page__subtitle">
+        {{ groups().length }} grupos · {{ confirmed().length }} equipos confirmados
+        <ng-container *ngIf="unassigned().length"> · <strong>{{ unassigned().length }} sin grupo</strong></ng-container>
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a pButton label="Calendario" icon="pi pi-calendar" class="p-button-outlined" [routerLink]="['/admin/torneos', tournamentId, 'calendario']"></a>
+      <a pButton label="Eliminatoria" icon="pi pi-sitemap" class="p-button-outlined" [routerLink]="['/admin/torneos', tournamentId, 'llaves']"></a>
+      <p-button *ngIf="groups().length" label="Nuevo grupo" icon="pi pi-plus" [outlined]="true" (onClick)="openCreate()" />
+      <p-button *ngIf="!groups().length" label="Sorteo automático" icon="pi pi-sync" (onClick)="openDraw()"
+        [disabled]="confirmed().length < 4" [pTooltip]="confirmed().length < 4 ? 'Se necesitan al menos 4 equipos confirmados' : ''" />
+    </div>
+  </div>
+
+  <div class="crud-alert" *ngIf="error()" role="alert">
+    <span>{{ error() }}</span>
+    <button type="button" aria-label="Reintentar" (click)="load()">↻</button>
+  </div>
+
+  <p class="crud-muted" *ngIf="loading()">Cargando grupos...</p>
+
+  <div class="crud-card cal-empty" *ngIf="!loading() && groups().length === 0">
+    <i class="pi pi-th-large"></i>
+    <p>
+      Este torneo todavía no tiene grupos. Haz el sorteo automático (reparte a los {{ confirmed().length }} equipos confirmados
+      en serpiente: A, B, C, C, B, A…) o crea los grupos a mano y arrastra a los equipos.
+    </p>
+    <div class="flex flex-wrap gap-2 justify-content-center">
+      <p-button label="Sorteo automático" icon="pi pi-sync" (onClick)="openDraw()" [disabled]="confirmed().length < 4" />
+      <p-button label="Crear grupo a mano" icon="pi pi-plus" [outlined]="true" (onClick)="openCreate()" />
+    </div>
+  </div>
+
+  <p class="crud-hint" *ngIf="!loading() && groups().length">
+    Arrastra equipos entre grupos para acomodarlos. Cuando un equipo ya tiene partidos de fase de grupos (aunque no se hayan
+    jugado), ya no se puede cambiar de grupo. La tabla se ordena con los criterios de desempate del torneo.
+  </p>
+
+  <div class="groups-layout" *ngIf="!loading() && groups().length" cdkDropListGroup>
+    <!-- Sin grupo -->
+    <section class="crud-card gcard gcard--tray" cdkDropList [cdkDropListData]="null" cdkDropListSortingDisabled
+      (cdkDropListDropped)="onDrop($event)">
+      <header class="gcard__header">
+        <span class="crud-strong">Sin grupo</span>
+        <span class="crud-muted">{{ unassigned().length }}</span>
+      </header>
+      <div class="gcard__body">
+        <div *ngFor="let t of unassigned(); trackBy: trackTeam" cdkDrag [cdkDragData]="t" [cdkDragDisabled]="busy()" class="gdrag">
+          <ng-container *ngTemplateOutlet="teamRow; context: { $implicit: t, showStats: false }"></ng-container>
+          <div *cdkDragPlaceholder class="gteam gteam--placeholder"></div>
+        </div>
+        <p class="crud-muted gcard__empty" *ngIf="unassigned().length === 0">Todos los equipos tienen grupo</p>
+      </div>
+    </section>
+
+    <!-- Grupos -->
+    <section class="crud-card gcard" *ngFor="let g of groups(); trackBy: trackGroup" cdkDropList [cdkDropListData]="g.id"
+      cdkDropListSortingDisabled (cdkDropListDropped)="onDrop($event)">
+      <header class="gcard__header">
+        <span class="crud-strong">{{ g.name }}</span>
+        <span class="flex align-items-center gap-1">
+          <span class="crud-muted gcard__count">{{ g.teams.length }} {{ g.teams.length === 1 ? 'equipo' : 'equipos' }}</span>
+          <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" pTooltip="Renombrar" ariaLabel="Renombrar"
+            (onClick)="openRename(g)" />
+          <p-button icon="pi pi-trash" [rounded]="true" [text]="true" size="small" severity="danger" pTooltip="Eliminar"
+            ariaLabel="Eliminar grupo" (onClick)="removeGroup(g)" />
+        </span>
+      </header>
+      <div class="gcard__cols" *ngIf="g.teams.length" aria-hidden="true">
+        <span class="gteam__handle"></span><span class="gteam__pos">#</span><span class="gcard__swatch"></span>
+        <span class="gteam__name">Equipo</span><span class="gteam__num">PJ</span><span class="gteam__num">DG</span><span class="gteam__num">Pts</span>
+      </div>
+      <div class="gcard__body">
+        <div *ngFor="let t of teamsOf(g); trackBy: trackTeam" cdkDrag [cdkDragData]="t" [cdkDragDisabled]="busy()" class="gdrag">
+          <ng-container *ngTemplateOutlet="teamRow; context: { $implicit: t, showStats: true }"></ng-container>
+          <div *cdkDragPlaceholder class="gteam gteam--placeholder"></div>
+        </div>
+        <p class="crud-muted gcard__empty" *ngIf="g.teams.length === 0">Suelta aquí un equipo</p>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ══ Diálogo: sorteo ═════════════════════════════════════════════════════ -->
+<p-dialog [(visible)]="drawVisible" header="Sorteo automático de grupos" [modal]="true" [style]="{ width: '420px' }" [breakpoints]="{ '575px': '95vw' }">
+  <div class="form-grid">
+    <div class="form-grid__full">
+      <label for="d-count">Número de grupos</label>
+      <p-inputNumber inputId="d-count" [(ngModel)]="drawCount" [min]="2" [max]="maxGroups()" [showButtons]="true" />
+      <p class="crud-hint">{{ drawSummary() }}</p>
+    </div>
+    <div class="form-grid__full">
+      <p-checkbox [(ngModel)]="drawShuffle" [binary]="true" inputId="d-shuffle" label="Mezclar al azar antes de repartir" />
+      <p class="crud-hint">Sin mezclar, se reparte en serpiente por orden de inscripción (útil si inscribiste a los equipos por nivel).</p>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="drawVisible = false" />
+    <p-button label="Sortear" icon="pi pi-check" [loading]="busy()" (onClick)="draw()" />
+  </ng-template>
+</p-dialog>
+
+<!-- ══ Diálogo: crear / renombrar grupo ═══════════════════════════════════ -->
+<p-dialog [(visible)]="nameVisible" [header]="nameGroup ? 'Renombrar grupo' : 'Nuevo grupo'" [modal]="true" [style]="{ width: '380px' }"
+  [breakpoints]="{ '575px': '95vw' }">
+  <div class="form-grid">
+    <div class="form-grid__full">
+      <label for="g-name">Nombre</label>
+      <input pInputText id="g-name" [(ngModel)]="nameValue" maxlength="50" (keyup.enter)="saveName()" />
+    </div>
+  </div>
+  <div class="form-alert" *ngIf="nameError()" role="alert">{{ nameError() }}</div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="nameVisible = false" />
+    <p-button [label]="nameGroup ? 'Guardar' : 'Crear grupo'" icon="pi pi-check" [loading]="busy()" (onClick)="saveName()" />
+  </ng-template>
+</p-dialog>

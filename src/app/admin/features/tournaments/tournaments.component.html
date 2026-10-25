@@ -79,8 +79,12 @@
             <div class="crud-actions">
               <a pButton icon="pi pi-calendar" class="p-button-rounded p-button-text" pTooltip="Calendario"
                 tooltipPosition="top" aria-label="Calendario" [routerLink]="['/admin/torneos', t.id, 'calendario']"></a>
+              <a *ngIf="t.format === 'groups_knockout' || t.format === 'mixed'" pButton icon="pi pi-th-large" class="p-button-rounded p-button-text"
+                pTooltip="Grupos" tooltipPosition="top" aria-label="Grupos" [routerLink]="['/admin/torneos', t.id, 'grupos']"></a>
               <a *ngIf="t.format !== 'league'" pButton icon="pi pi-sitemap" class="p-button-rounded p-button-text" pTooltip="Eliminatoria (llaves)"
                 tooltipPosition="top" aria-label="Eliminatoria" [routerLink]="['/admin/torneos', t.id, 'llaves']"></a>
+              <a pButton icon="pi pi-chart-bar" class="p-button-rounded p-button-text" pTooltip="Estadísticas"
+                tooltipPosition="top" aria-label="Estadísticas" [routerLink]="['/admin/torneos', t.id, 'estadisticas']"></a>
               <a pButton icon="pi pi-list" class="p-button-rounded p-button-text" pTooltip="Partidos y resultados"
                 tooltipPosition="top" aria-label="Partidos y resultados" [routerLink]="['/admin/torneos', t.id, 'partidos']"></a>
               <p-button icon="pi pi-users" [rounded]="true" [text]="true" pTooltip="Equipos inscritos" tooltipPosition="top"

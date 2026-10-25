@@ -1,0 +1,162 @@
+$border: #e8eaf0;
+$text-primary: #1a1d2e;
+$text-secondary: #8b8fa8;
+$accent: #4f46e5;
+
+.cal-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 16px;
+  text-align: center;
+  color: $text-secondary;
+
+  p {
+    max-width: 560px;
+    margin: 0;
+  }
+
+  i {
+    font-size: 32px;
+    color: $accent;
+  }
+}
+
+.groups-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  align-items: start;
+  margin-top: 12px;
+}
+
+.gcard {
+  min-height: 120px;
+
+  &--tray {
+    background: #fafbfd;
+    border-style: dashed;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 8px 8px 14px;
+    border-bottom: 1px solid $border;
+    min-height: 48px;
+  }
+
+  &__count {
+    font-size: 12px;
+    margin-right: 4px;
+  }
+
+  // Mismas medidas que las filas (.gteam) para que las columnas cuadren
+  &__cols {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 17px 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: $text-secondary;
+    text-transform: uppercase;
+
+    .gteam__pos,
+    .gteam__num {
+      color: $text-secondary;
+      font-weight: 700;
+    }
+  }
+
+  &__swatch {
+    width: 20px; // ancho de .crud-swatch + su margen
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    min-height: 60px;
+  }
+
+  &__empty {
+    margin: 0;
+    padding: 14px 0;
+    text-align: center;
+    font-size: 12.5px;
+  }
+}
+
+.gdrag {
+  cursor: grab;
+
+  &.cdk-drag-disabled {
+    cursor: default;
+  }
+}
+
+.gteam {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 8px;
+  background: #fff;
+  border: 1px solid $border;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: $text-primary;
+
+  &__handle {
+    width: 16px;
+    color: #c2c5d6;
+    font-size: 12px;
+  }
+
+  &__pos {
+    width: 22px;
+    text-align: center;
+    font-weight: 700;
+    color: $accent;
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__num {
+    width: 34px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    color: $text-secondary;
+
+    &--pts {
+      font-weight: 700;
+      color: $text-primary;
+    }
+  }
+
+  &--placeholder {
+    min-height: 36px;
+    background: #eef2ff;
+    border: 2px dashed #c7d2fe;
+  }
+}
+
+.cdk-drag-preview.gdrag .gteam,
+.cdk-drag-preview .gteam {
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.15);
+}
+
+.cdk-drop-list-receiving {
+  outline: 2px dashed #c7d2fe;
+  outline-offset: -4px;
+}

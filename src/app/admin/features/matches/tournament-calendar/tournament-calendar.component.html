@@ -33,6 +33,8 @@
       </p>
     </div>
     <div class="flex flex-wrap gap-2">
+      <a *ngIf="tournament()?.format === 'groups_knockout' || tournament()?.format === 'mixed'" pButton label="Grupos" icon="pi pi-th-large"
+        class="p-button-outlined" [routerLink]="['/admin/torneos', tournamentId, 'grupos']"></a>
       <p-button label="Generar jornadas" icon="pi pi-sync" (onClick)="openGenerate()"
         [disabled]="tournament()?.format === 'bracket'"
         [pTooltip]="tournament()?.format === 'bracket' ? 'En eliminación directa usa el cuadro de Brackets' : ''" />
@@ -177,8 +179,16 @@
       <p-inputNumber inputId="g-days" [(ngModel)]="genDays" [min]="1" [max]="60" [showButtons]="true" />
     </div>
     <div class="form-grid__full" *ngIf="genStart">
-      <label for="g-times">Horarios de inicio (escribe HH:MM y presiona Enter)</label>
-      <p-chips inputId="g-times" [(ngModel)]="genTimes" [allowDuplicate]="false" separator="," placeholder="09:00" />
+      <label for="g-times">Horarios de inicio</label>
+      <div class="time-picker">
+        <p-calendar inputId="g-times" [(ngModel)]="genNewTime" [timeOnly]="true" hourFormat="24" [stepMinute]="5"
+          placeholder="HH:MM" [readonlyInput]="true" appendTo="body" />
+        <p-button label="Agregar" icon="pi pi-plus" [outlined]="true" [disabled]="!genNewTime" (onClick)="addTime()" />
+      </div>
+      <div class="time-chips">
+        <p-chip *ngFor="let t of genTimes" [label]="t" [removable]="true" (onRemove)="removeTime(t)" />
+        <small class="crud-muted" *ngIf="!genTimes.length">Agrega al menos un horario.</small>
+      </div>
       <small class="field-error" *ngIf="invalidTimes().length">Horarios inválidos: {{ invalidTimes().join(', ') }} (usa 24 h, p. ej. 18:30)</small>
     </div>
     <div class="form-grid__full" *ngIf="genStart">

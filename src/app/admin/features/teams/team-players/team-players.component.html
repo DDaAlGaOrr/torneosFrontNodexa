@@ -2,7 +2,7 @@
 <p-confirmDialog />
 
 <div class="crud-page">
-  <a class="crud-back" routerLink="/admin/equipos"><i class="pi pi-arrow-left"></i> Volver a equipos</a>
+  <a class="crud-back" [routerLink]="backLink"><i class="pi pi-arrow-left"></i> {{ isAdmin ? 'Volver a equipos' : 'Volver a mi equipo' }}</a>
 
   <div class="crud-page__header">
     <div>
@@ -33,15 +33,21 @@
             <input pInputText type="text" placeholder="Buscar por nombre, número o posición..."
               (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
           </span>
+          <p-dropdown [options]="tournamentOptions()" optionLabel="name" optionValue="id" [ngModel]="tournamentId"
+            (ngModelChange)="changeTournament($event)" pTooltip="Torneo de los totales (goles, asistencias, tarjetas)" />
         </div>
       </ng-template>
 
       <ng-template pTemplate="header">
         <tr>
-          <th pSortableColumn="jersey_number" style="width: 90px"># <p-sortIcon field="jersey_number" /></th>
+          <th pSortableColumn="jersey_number" style="width: 90px" pTooltip="Número de camiseta">Núm. <p-sortIcon field="jersey_number" /></th>
           <th pSortableColumn="name">Jugador <p-sortIcon field="name" /></th>
           <th pSortableColumn="position">Posición <p-sortIcon field="position" /></th>
           <th pSortableColumn="status">Estatus <p-sortIcon field="status" /></th>
+          <th pSortableColumn="goals" class="stat-col" pTooltip="Goles">⚽ <p-sortIcon field="goals" /></th>
+          <th pSortableColumn="assists" class="stat-col" pTooltip="Asistencias">🅰️ <p-sortIcon field="assists" /></th>
+          <th pSortableColumn="yellow_cards" class="stat-col" pTooltip="Amarillas">🟨 <p-sortIcon field="yellow_cards" /></th>
+          <th pSortableColumn="red_cards" class="stat-col" pTooltip="Rojas">🟥 <p-sortIcon field="red_cards" /></th>
           <th class="crud-end">Acciones</th>
         </tr>
       </ng-template>
@@ -50,11 +56,16 @@
         <tr>
           <td class="crud-muted">{{ p.jersey_number || '—' }}</td>
           <td class="crud-strong">
-            {{ p.name }}
+            <a class="crud-link" role="button" tabindex="0" (click)="detailPlayerId = p.id" (keyup.enter)="detailPlayerId = p.id"
+              pTooltip="Ver ficha y estadísticas">{{ p.name }}</a>
             <p-tag *ngIf="isCaptain(p)" value="Capitán" severity="info" [style]="{ 'margin-left.px': 8 }" />
           </td>
           <td class="crud-muted">{{ p.position || '—' }}</td>
           <td><p-tag [value]="statusLabel(p.status)" [severity]="statusSeverity(p.status)" /></td>
+          <td class="stat-col">{{ p.goals || '·' }}</td>
+          <td class="stat-col">{{ p.assists || '·' }}</td>
+          <td class="stat-col">{{ p.yellow_cards || '·' }}</td>
+          <td class="stat-col">{{ p.red_cards || '·' }}</td>
           <td>
             <div class="crud-actions">
               <p-button [icon]="isCaptain(p) ? 'pi pi-star-fill' : 'pi pi-star'" [rounded]="true" [text]="true"
@@ -69,7 +80,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="5" class="crud-table__empty">
+          <td colspan="9" class="crud-table__empty">
             {{ loading() ? 'Cargando...' : items().length === 0 ? 'Este equipo aún no tiene jugadores' : 'No se encontraron jugadores' }}
           </td>
         </tr>
@@ -89,8 +100,8 @@
     </div>
     <div>
       <label for="p-number">Número</label>
-      <input pInputText id="p-number" formControlName="jersey_number" placeholder="10" maxlength="6" />
-      <small class="field-error" *ngIf="fieldInvalid('jersey_number')">Máximo 5 caracteres.</small>
+      <input pInputText id="p-number" formControlName="jersey_number" placeholder="10" maxlength="5" inputmode="numeric" [pKeyFilter]="digits" />
+      <small class="field-error" *ngIf="fieldInvalid('jersey_number')">Solo números, máximo 5 dígitos.</small>
     </div>
     <div>
       <label for="p-pos">Posición</label>
@@ -112,3 +123,5 @@
     <p-button [label]="editing() ? 'Guardar cambios' : 'Agregar jugador'" icon="pi pi-check" [loading]="saving()" (onClick)="save()" />
   </ng-template>
 </p-dialog>
+
+<app-player-detail [playerId]="detailPlayerId" (closed)="detailPlayerId = null" />

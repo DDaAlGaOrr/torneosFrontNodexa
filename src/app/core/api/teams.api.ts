@@ -17,6 +17,8 @@ export interface Team {
   primary_color: string | null;
   category_id: number | null;
   category_name: string | null;
+  /** Delegado / encargado del equipo */
+  contact_name: string | null;
   contact_email: string | null;
   contact_phone: string | null;
   captain_player_id: number | null;
@@ -31,6 +33,7 @@ export interface TeamPayload {
   category_id: number;
   short_name: string;
   primary_color: string;
+  contact_name: string;
   contact_email: string;
   contact_phone: string;
   coach_ids: number[];

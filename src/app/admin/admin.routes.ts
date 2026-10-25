@@ -12,6 +12,22 @@ export const ADMIN_ROUTES: Routes = [
     children: [
       { path: '', pathMatch: 'full', canActivate: [homeRedirectGuard], children: [] },
 
+      // ── Dashboard (inicio del administrador) ───────────────────────────────
+      {
+        path: 'dashboard',
+        canActivate: [roleGuard],
+        data: { title: 'Dashboard', roles: ['admin'] },
+        loadComponent: () => import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+      },
+
+      // ── Entrenador: su equipo ───────────────────────────────────────────────
+      {
+        path: 'mi-equipo',
+        canActivate: [roleGuard],
+        data: { title: 'Mi equipo', roles: ['coach'] },
+        loadComponent: () => import('./features/coach/my-team/my-team.component').then((m) => m.MyTeamComponent),
+      },
+
       // ── Partidos: captura de resultados (administrador y árbitro asignado) ──
       {
         path: 'mis-partidos',
@@ -33,6 +49,20 @@ export const ADMIN_ROUTES: Routes = [
         data: { title: 'Calendario', roles: ['admin'] },
         loadComponent: () =>
           import('./features/matches/tournament-calendar/tournament-calendar.component').then((m) => m.TournamentCalendarComponent),
+      },
+      {
+        path: 'torneos/:tournamentId/estadisticas',
+        canActivate: [roleGuard],
+        data: { title: 'Estadísticas', roles: ['admin'] },
+        loadComponent: () =>
+          import('./features/matches/tournament-stats/tournament-stats.component').then((m) => m.TournamentStatsComponent),
+      },
+      {
+        path: 'torneos/:tournamentId/grupos',
+        canActivate: [roleGuard],
+        data: { title: 'Grupos', roles: ['admin'] },
+        loadComponent: () =>
+          import('./features/matches/tournament-groups/tournament-groups.component').then((m) => m.TournamentGroupsComponent),
       },
       {
         path: 'torneos/:tournamentId/llaves',
@@ -66,7 +96,8 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: 'equipos/:teamId/jugadores',
         canActivate: [roleGuard],
-        data: { title: 'Jugadores', roles: ['admin'] },
+        // El entrenador entra a la plantilla de sus equipos (la API rechaza los demás)
+        data: { title: 'Jugadores', roles: ['admin', 'coach'] },
         loadComponent: () =>
           import('./features/teams/team-players/team-players.component').then((m) => m.TeamPlayersComponent),
       },

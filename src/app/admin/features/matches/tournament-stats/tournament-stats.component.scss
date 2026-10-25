@@ -1,0 +1,48 @@
+$text-secondary: #8b8fa8;
+
+.stats-highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+
+  &__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: $text-secondary;
+  }
+
+  strong {
+    font-size: 16px;
+    color: #1a1d2e;
+  }
+
+  span:last-child {
+    font-size: 12.5px;
+  }
+}
+
+.stats-card {
+  padding: 4px 8px 12px;
+}
+
+.fair-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.fair-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: $text-secondary;
+}

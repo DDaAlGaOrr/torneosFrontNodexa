@@ -331,3 +331,21 @@ $accent-light: #ede9fe;
     max-height: 260px;
   }
 }
+
+// Generar jornadas: selector de hora + lista de horarios
+.time-picker {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  ::ng-deep .p-calendar {
+    width: 140px;
+  }
+}
+
+.time-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}

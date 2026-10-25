@@ -1,0 +1,122 @@
+<div class="crud-page">
+  <div class="crud-page__header">
+    <div>
+      <h2 class="crud-page__title">
+        <span class="crud-swatch" *ngIf="overview() as o" [style.background]="o.team.primary_color || '#d1d5db'"></span>
+        {{ overview()?.team?.name || 'Mi equipo' }}
+      </h2>
+      <p class="crud-page__subtitle" *ngIf="overview() as o">
+        {{ o.team.category_name || 'Sin categoría' }} · {{ o.team.players_count }} {{ o.team.players_count === 1 ? 'jugador' : 'jugadores' }}
+        <ng-container *ngIf="o.team.captain_name"> · Capitán: {{ o.team.captain_name }}</ng-container>
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-2 align-items-center">
+      <p-dropdown *ngIf="teams().length > 1" [options]="teams()" optionLabel="name" optionValue="id" [ngModel]="teamId"
+        (ngModelChange)="selectTeam($event)" />
+      <a pButton *ngIf="teamId" label="Mi plantilla" icon="pi pi-users" [routerLink]="['/admin/equipos', teamId, 'jugadores']"></a>
+    </div>
+  </div>
+
+  <div class="crud-alert" *ngIf="error()" role="alert">
+    <span>{{ error() }}</span>
+    <button type="button" aria-label="Cerrar" (click)="error.set('')">×</button>
+  </div>
+
+  <p class="crud-muted" *ngIf="loading()">Cargando...</p>
+  <div class="crud-card myteam-empty" *ngIf="!loading() && teams().length === 0">
+    <i class="pi pi-users"></i>
+    <p>Todavía no estás asignado como entrenador de ningún equipo. Pide al administrador de la liga que te asigne.</p>
+  </div>
+
+  <ng-container *ngIf="overview() as o">
+    <!-- Sancionados: lo más urgente para armar el equipo -->
+    <div class="myteam-alert" *ngIf="o.sanctions.length" role="alert">
+      <i class="pi pi-exclamation-triangle"></i>
+      <div>
+        <strong>Jugadores suspendidos (no pueden jugar el próximo partido):</strong>
+        <ul>
+          <li *ngFor="let s of o.sanctions">
+            #{{ s.jersey_number || '—' }} {{ s.player_name }} — {{ s.reason }}, {{ s.matches_suspended }} partido(s) · {{ s.tournament_name }}
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="myteam-grid">
+      <!-- Posición en cada torneo -->
+      <section class="crud-card myteam-card myteam-card--wide">
+        <header class="myteam-card__header"><span class="crud-strong">Mis torneos</span></header>
+        <p class="crud-muted myteam-card__empty" *ngIf="!o.standings.length">El equipo no está inscrito en ningún torneo activo.</p>
+        <div class="myteam-table-wrap" *ngIf="o.standings.length">
+          <table class="myteam-table">
+            <thead>
+              <tr><th>Torneo</th><th>Pos.</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let s of o.standings">
+                <td>
+                  <div class="crud-strong">{{ s.tournament_name }}</div>
+                  <small class="crud-muted" *ngIf="s.group_name">{{ s.group_name }}</small>
+                </td>
+                <td class="myteam-pos">{{ ordinal(s.position) }}<small class="crud-muted" *ngIf="s.teams_in_group"> de {{ s.teams_in_group }}</small></td>
+                <td>{{ s.PJ }}</td><td>{{ s.PG }}</td><td>{{ s.PE }}</td><td>{{ s.PP }}</td>
+                <td>{{ s.GF }}</td><td>{{ s.GC }}</td><td>{{ s.DG > 0 ? '+' + s.DG : s.DG }}</td>
+                <td class="crud-strong">{{ s.Puntos }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Próximos partidos -->
+      <section class="crud-card myteam-card">
+        <header class="myteam-card__header"><span class="crud-strong">Próximos partidos</span></header>
+        <p class="crud-muted myteam-card__empty" *ngIf="!o.upcoming.length">No hay partidos programados.</p>
+        <div class="myteam-match" *ngFor="let m of o.upcoming">
+          <div class="myteam-match__main">
+            <span class="crud-strong">vs {{ m.rival_name || 'Por definir' }}</span>
+            <p-tag *ngIf="m.status !== 'scheduled'" [value]="statusLabel(m.status)" [severity]="statusSeverity(m.status)" />
+          </div>
+          <div class="crud-muted myteam-match__meta">
+            <span><i class="pi pi-calendar"></i> {{ formatLocal(m.scheduled_local) }}</span>
+            <span *ngIf="m.field_name"><i class="pi pi-map-marker"></i>
+              <a *ngIf="m.maps_url; else plain" class="crud-link" [href]="m.maps_url" target="_blank" rel="noopener">{{ m.field_name }}</a>
+              <ng-template #plain>{{ m.field_name }}</ng-template>
+            </span>
+            <span>{{ m.tournament_name }} · {{ m.round_name }}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Últimos resultados -->
+      <section class="crud-card myteam-card">
+        <header class="myteam-card__header"><span class="crud-strong">Últimos resultados</span></header>
+        <p class="crud-muted myteam-card__empty" *ngIf="!o.recent.length">Todavía no hay partidos jugados.</p>
+        <div class="myteam-match" *ngFor="let m of o.recent">
+          <div class="myteam-match__main">
+            <span class="res" [class]="'res ' + result[m.result!].css">{{ result[m.result!].label }}</span>
+            <span class="crud-strong">{{ m.own_score }} – {{ m.rival_score }}</span>
+            <span>vs {{ m.rival_name }}</span>
+            <small class="crud-muted" *ngIf="m.penalties_home !== null">(pen.)</small>
+          </div>
+          <div class="crud-muted myteam-match__meta">
+            <span>{{ formatLocal(m.scheduled_local) }}</span>
+            <span>{{ m.tournament_name }} · {{ m.round_name }}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Datos del equipo -->
+      <section class="crud-card myteam-card">
+        <header class="myteam-card__header"><span class="crud-strong">Datos del equipo</span></header>
+        <dl class="myteam-data">
+          <dt>Delegado</dt><dd>{{ o.team.contact_name || '—' }}</dd>
+          <dt>Teléfono</dt><dd>{{ o.team.contact_phone || '—' }}</dd>
+          <dt>Correo</dt><dd>{{ o.team.contact_email || '—' }}</dd>
+          <dt>Capitán</dt><dd>{{ o.team.captain_name || '—' }}</dd>
+        </dl>
+        <p class="crud-hint">Para cambiar estos datos, contacta al administrador de la liga.</p>
+      </section>
+    </div>
+  </ng-container>
+</div>

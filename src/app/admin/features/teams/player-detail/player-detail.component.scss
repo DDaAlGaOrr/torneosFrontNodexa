@@ -1,0 +1,121 @@
+$border: #e8eaf0;
+$text-primary: #1a1d2e;
+$text-secondary: #8b8fa8;
+
+:host ::ng-deep .player-drawer.p-sidebar {
+  width: 420px;
+  max-width: 100vw;
+}
+
+.pd-title {
+  font-weight: 700;
+  color: $text-primary;
+}
+
+.pd-muted {
+  color: $text-secondary;
+  font-size: 13px;
+}
+
+.pd-error {
+  color: #b91c1c;
+}
+
+.pd-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pd-number {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.pd-name {
+  margin: 0 0 2px;
+  font-size: 18px;
+  font-weight: 700;
+  color: $text-primary;
+}
+
+.pd-totals {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 4px;
+    border: 1px solid $border;
+    border-radius: 10px;
+  }
+
+  strong {
+    font-size: 22px;
+    color: $text-primary;
+  }
+
+  span {
+    font-size: 11.5px;
+    color: $text-secondary;
+  }
+}
+
+.pd-section {
+  margin-bottom: 16px;
+
+  h4 {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $text-secondary;
+  }
+}
+
+.pd-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 6px 4px;
+    border-bottom: 1px solid $border;
+    text-align: center;
+  }
+
+  th:first-child,
+  td:first-child {
+    text-align: left;
+  }
+}
+
+.pd-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px dashed $border;
+  font-size: 13.5px;
+}
+
+.pd-note {
+  margin-top: 12px;
+  font-size: 12px;
+}

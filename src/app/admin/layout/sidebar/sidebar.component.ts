@@ -45,6 +45,7 @@ export class SidebarComponent {
       roles: ['admin'],
       expanded: true,
       children: [
+        { label: 'Dashboard', route: 'dashboard' },
         { label: 'Torneos', route: 'torneos' },
         { label: 'Equipos', route: 'equipos' },
       ],
@@ -56,6 +57,15 @@ export class SidebarComponent {
       expanded: true,
       children: [
         { label: 'Mis partidos', route: 'mis-partidos' },
+      ],
+    },
+    {
+      label: 'Mi equipo',
+      icon: 'league',
+      roles: ['coach'],
+      expanded: true,
+      children: [
+        { label: 'Resumen', route: 'mi-equipo' },
       ],
     },
     {

@@ -44,4 +44,11 @@ export class UsersApi {
   remove(role: ManagedRole, id: number): Observable<ApiResponse<MessageResponse>> {
     return this.http.delete<ApiResponse<MessageResponse>>(`${this.url}/${role}/${id}`);
   }
+  /** Al dejar de ser entrenador sale de sus equipos; al dejar de ser árbitro, de los partidos no finalizados */
+  changeRole(role: ManagedRole, id: number, newRole: ManagedRole): Observable<ApiResponse<MessageResponse>> {
+    return this.http.put<ApiResponse<MessageResponse>>(`${this.url}/${role}/${id}/role`, { new_role: newRole });
+  }
+  resetPassword(role: ManagedRole, id: number, password: string): Observable<ApiResponse<MessageResponse>> {
+    return this.http.put<ApiResponse<MessageResponse>>(`${this.url}/${role}/${id}/password`, { password });
+  }
 }

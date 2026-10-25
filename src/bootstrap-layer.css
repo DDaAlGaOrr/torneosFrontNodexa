@@ -1,0 +1,6 @@
+/*
+ * Bootstrap dentro de la capa "bootstrap" (por debajo de PrimeNG; el orden se fija en layers.css).
+ * Lo sigue usando la vista pública; se quitará cuando se rehaga con PrimeNG.
+ * Va en un archivo aparte porque al empaquetar, el contenido importado queda antes que el resto del archivo.
+ */
+@import url('~bootstrap/dist/css/bootstrap.min.css') layer(bootstrap);

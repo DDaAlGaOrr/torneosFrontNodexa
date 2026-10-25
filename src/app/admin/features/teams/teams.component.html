@@ -34,6 +34,7 @@
           <th pSortableColumn="name">Equipo <p-sortIcon field="name" /></th>
           <th pSortableColumn="category_name">Categoría <p-sortIcon field="category_name" /></th>
           <th>Entrenadores</th>
+          <th>Delegado</th>
           <th pSortableColumn="players_count">Jugadores <p-sortIcon field="players_count" /></th>
           <th>Capitán</th>
           <th class="crud-end">Acciones</th>
@@ -48,6 +49,13 @@
           </td>
           <td>{{ t.category_name || '—' }}</td>
           <td class="crud-muted">{{ coachNames(t) }}</td>
+          <td class="crud-muted">
+            <ng-container *ngIf="t.contact_name || t.contact_phone || t.contact_email; else noContact">
+              <div *ngIf="t.contact_name">{{ t.contact_name }}</div>
+              <small *ngIf="t.contact_phone || t.contact_email">{{ t.contact_phone || t.contact_email }}</small>
+            </ng-container>
+            <ng-template #noContact>—</ng-template>
+          </td>
           <td>
             <a class="crud-link" [routerLink]="['/admin/equipos', t.id, 'jugadores']">
               {{ t.players_count }} {{ t.players_count === 1 ? 'jugador' : 'jugadores' }}
@@ -66,7 +74,7 @@
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
-        <tr><td colspan="6" class="crud-table__empty">{{ loading() ? 'Cargando...' : 'No se encontraron equipos' }}</td></tr>
+        <tr><td colspan="7" class="crud-table__empty">{{ loading() ? 'Cargando...' : 'No se encontraron equipos' }}</td></tr>
       </ng-template>
     </p-table>
   </div>
@@ -100,6 +108,11 @@
       <label for="t-color">Color del uniforme</label>
       <input type="color" id="t-color" class="crud-color-input" formControlName="primary_color" />
     </div>
+    <div class="form-grid__full">
+      <label for="t-contact">Delegado / encargado (opcional)</label>
+      <input pInputText id="t-contact" formControlName="contact_name" placeholder="Nombre de la persona de contacto" maxlength="150" />
+      <small class="field-error" *ngIf="fieldInvalid('contact_name')">Máximo 150 caracteres.</small>
+    </div>
     <div>
       <label for="t-email">Correo de contacto (opcional)</label>
       <input pInputText id="t-email" type="email" formControlName="contact_email" placeholder="equipo@correo.com" />
@@ -107,8 +120,8 @@
     </div>
     <div>
       <label for="t-phone">Teléfono (opcional)</label>
-      <input pInputText id="t-phone" type="tel" formControlName="contact_phone" placeholder="667 123 4567" maxlength="35" />
-      <small class="field-error" *ngIf="fieldInvalid('contact_phone')">Máximo 30 caracteres.</small>
+      <input pInputText id="t-phone" type="tel" formControlName="contact_phone" placeholder="667 123 4567" maxlength="30" [pKeyFilter]="phoneChars" />
+      <small class="field-error" *ngIf="fieldInvalid('contact_phone')">Solo números, espacios y + ( ) -; máximo 30 caracteres.</small>
     </div>
     <div class="form-grid__full">
       <label for="t-coaches">Entrenadores (opcional)</label>

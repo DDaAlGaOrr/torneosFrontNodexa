@@ -14,6 +14,7 @@ import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { DialogDefaultsDirective } from '../../../core/ui/dialog-defaults.directive';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
@@ -76,6 +77,7 @@ const SEVERITY: Record<TournamentStatus, string | undefined> = {
     TableModule,
     ButtonModule,
     DialogModule,
+    DialogDefaultsDirective,
     DropdownModule,
     InputTextModule,
     InputTextareaModule,

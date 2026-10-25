@@ -11,8 +11,11 @@
     </div>
     <div class="flex flex-wrap gap-2">
       <a pButton label="Calendario" icon="pi pi-calendar" [routerLink]="['/admin/torneos', tournamentId, 'calendario']"></a>
+      <a *ngIf="tournament()?.format === 'groups_knockout' || tournament()?.format === 'mixed'" pButton label="Grupos" icon="pi pi-th-large"
+        class="p-button-outlined" [routerLink]="['/admin/torneos', tournamentId, 'grupos']"></a>
       <a *ngIf="tournament()?.format !== 'league'" pButton label="Eliminatoria" icon="pi pi-sitemap" class="p-button-outlined"
         [routerLink]="['/admin/torneos', tournamentId, 'llaves']"></a>
+      <a pButton label="Estadísticas" icon="pi pi-chart-bar" class="p-button-outlined" [routerLink]="['/admin/torneos', tournamentId, 'estadisticas']"></a>
       <p-button label="Actualizar" icon="pi pi-refresh" [outlined]="true" (onClick)="load()" />
     </div>
   </div>

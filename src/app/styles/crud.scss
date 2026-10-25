@@ -63,6 +63,14 @@ $border: #e8eaf0;
   text-align: right;
 }
 
+// Columnas numéricas cortas (goles, tarjetas...)
+.stat-col {
+  width: 64px;
+  text-align: center !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .crud-alert {
   display: flex;
   align-items: center;
@@ -193,6 +201,12 @@ a.p-button.p-button-text {
 :host ::ng-deep .form-grid .p-password,
 :host ::ng-deep .form-grid .p-password input {
   width: 100%;
+}
+
+/* El input interno de p-inputNumber trae un ancho fijo: sin esto se sale de su columna (p. ej. con botones) */
+:host ::ng-deep .form-grid .p-inputnumber-input {
+  width: 100%;
+  min-width: 0;
 }
 
 .field-error {

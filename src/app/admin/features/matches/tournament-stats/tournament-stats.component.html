@@ -1,0 +1,214 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<!-- Nombre del jugador que abre su ficha -->
+<ng-template #playerCell let-r>
+  <a class="crud-link" role="button" tabindex="0" (click)="detailPlayerId = r.player_id" (keyup.enter)="detailPlayerId = r.player_id">
+    {{ r.player_name }}
+  </a>
+  <small class="crud-muted" *ngIf="r.jersey_number" pTooltip="Número de camiseta"> · Núm. {{ r.jersey_number }}</small>
+</ng-template>
+
+<div class="crud-page">
+  <a class="crud-back" [routerLink]="['/admin/torneos', tournamentId, 'partidos']"><i class="pi pi-arrow-left"></i> Volver a los partidos</a>
+
+  <div class="crud-page__header">
+    <div>
+      <h2 class="crud-page__title">{{ tournament()?.name || 'Estadísticas' }}</h2>
+      <p class="crud-page__subtitle">Se actualizan solas al capturar y finalizar partidos.</p>
+    </div>
+    <p-button icon="pi pi-refresh" [outlined]="true" label="Actualizar" (onClick)="load()" />
+  </div>
+
+  <div class="crud-alert" *ngIf="error()" role="alert">
+    <span>{{ error() }}</span>
+    <button type="button" aria-label="Reintentar" (click)="load()">↻</button>
+  </div>
+
+  <p class="crud-muted" *ngIf="loading()">Cargando estadísticas...</p>
+
+  <ng-container *ngIf="!loading()">
+    <!-- Destacados -->
+    <div class="stats-highlights" *ngIf="highlights() as h">
+      <div class="crud-card stat-tile" *ngIf="h.top">
+        <span class="stat-tile__label">⚽ Goleador</span>
+        <strong>{{ h.top.player_name }}</strong>
+        <span class="crud-muted">{{ h.top.goals }} goles · {{ h.top.team_name }}</span>
+      </div>
+      <div class="crud-card stat-tile">
+        <span class="stat-tile__label">🔥 Equipo más goleador</span>
+        <strong>{{ h.most.team_name }}</strong>
+        <span class="crud-muted">{{ h.most.GF }} goles en {{ h.most.PJ }} partidos</span>
+      </div>
+      <div class="crud-card stat-tile">
+        <span class="stat-tile__label">🧱 Menos goleado</span>
+        <strong>{{ h.least.team_name }}</strong>
+        <span class="crud-muted">{{ h.least.GC }} goles recibidos en {{ h.least.PJ }} partidos</span>
+      </div>
+      <div class="crud-card stat-tile">
+        <span class="stat-tile__label">🤝 Fair play</span>
+        <strong>{{ h.fair.team_name }}</strong>
+        <span class="crud-muted">{{ h.fair.fair_play }} puntos de penalización</span>
+      </div>
+    </div>
+
+    <div class="crud-card stats-card">
+      <p-tabView [scrollable]="true">
+        <!-- Goleadores -->
+        <p-tabPanel header="Goleadores">
+          <p class="crud-muted" *ngIf="!scorers().length">Todavía no hay goles registrados.</p>
+          <p-table *ngIf="scorers().length" [value]="scorers()" responsiveLayout="scroll">
+            <ng-template pTemplate="header"><tr><th style="width: 64px" pTooltip="Posición en la tabla">Pos.</th><th>Jugador</th><th>Equipo</th><th class="stat-col">Goles</th><th class="stat-col">Asist.</th></tr></ng-template>
+            <ng-template pTemplate="body" let-r let-i="rowIndex">
+              <tr>
+                <td class="crud-muted">{{ rank(scorers(), i, 'goals') }}</td>
+                <td><ng-container *ngTemplateOutlet="playerCell; context: { $implicit: r }"></ng-container></td>
+                <td class="crud-muted">{{ r.team_name }}</td>
+                <td class="stat-col crud-strong">{{ r.goals }}</td>
+                <td class="stat-col">{{ r.assists }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+
+        <!-- Asistencias -->
+        <p-tabPanel header="Asistencias">
+          <p class="crud-muted" *ngIf="!assists().length">Todavía no hay asistencias registradas.</p>
+          <p-table *ngIf="assists().length" [value]="assists()" responsiveLayout="scroll">
+            <ng-template pTemplate="header"><tr><th style="width: 64px" pTooltip="Posición en la tabla">Pos.</th><th>Jugador</th><th>Equipo</th><th class="stat-col">Asist.</th><th class="stat-col">Goles</th></tr></ng-template>
+            <ng-template pTemplate="body" let-r let-i="rowIndex">
+              <tr>
+                <td class="crud-muted">{{ rank(assists(), i, 'assists') }}</td>
+                <td><ng-container *ngTemplateOutlet="playerCell; context: { $implicit: r }"></ng-container></td>
+                <td class="crud-muted">{{ r.team_name }}</td>
+                <td class="stat-col crud-strong">{{ r.assists }}</td>
+                <td class="stat-col">{{ r.goals }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+
+        <!-- Porteros -->
+        <p-tabPanel header="Porteros">
+          <p class="crud-hint">
+            Aproximación: no se registran alineaciones, así que a cada jugador con posición "Portero" se le atribuyen los goles
+            recibidos y las porterías en cero de su equipo.
+          </p>
+          <p class="crud-muted" *ngIf="!keepers().length">No hay jugadores con posición de portero en los equipos del torneo.</p>
+          <p-table *ngIf="keepers().length" [value]="keepers()" responsiveLayout="scroll">
+            <ng-template pTemplate="header">
+              <tr><th>Portero</th><th>Equipo</th><th class="stat-col">PJ</th><th class="stat-col">GC</th><th class="stat-col">Prom.</th><th class="stat-col">En cero</th></tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-r>
+              <tr>
+                <td>
+                  <ng-container *ngTemplateOutlet="playerCell; context: { $implicit: r }"></ng-container>
+                  <small class="crud-muted" *ngIf="r.shared_with"> (comparte con {{ r.shared_with }})</small>
+                </td>
+                <td class="crud-muted">{{ r.team_name }}</td>
+                <td class="stat-col">{{ r.PJ }}</td>
+                <td class="stat-col">{{ r.goals_against }}</td>
+                <td class="stat-col">{{ r.goals_against_avg ?? '—' }}</td>
+                <td class="stat-col crud-strong">{{ r.clean_sheets }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+
+        <!-- Equipos -->
+        <p-tabPanel header="Equipos">
+          <p-table [value]="teams()" responsiveLayout="scroll" sortField="GF" [sortOrder]="-1">
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="team_name">Equipo <p-sortIcon field="team_name" /></th>
+                <th pSortableColumn="PJ" class="stat-col">PJ <p-sortIcon field="PJ" /></th>
+                <th pSortableColumn="PG" class="stat-col">G <p-sortIcon field="PG" /></th>
+                <th pSortableColumn="PE" class="stat-col">E <p-sortIcon field="PE" /></th>
+                <th pSortableColumn="PP" class="stat-col">P <p-sortIcon field="PP" /></th>
+                <th pSortableColumn="GF" class="stat-col">GF <p-sortIcon field="GF" /></th>
+                <th pSortableColumn="GC" class="stat-col">GC <p-sortIcon field="GC" /></th>
+                <th pSortableColumn="DG" class="stat-col">DG <p-sortIcon field="DG" /></th>
+                <th pSortableColumn="clean_sheets" class="stat-col" pTooltip="Partidos sin recibir gol">En cero <p-sortIcon field="clean_sheets" /></th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-t>
+              <tr>
+                <td class="crud-strong"><span class="crud-swatch" [style.background]="t.primary_color || '#d1d5db'"></span>{{ t.team_name }}</td>
+                <td class="stat-col">{{ t.PJ }}</td><td class="stat-col">{{ t.PG }}</td><td class="stat-col">{{ t.PE }}</td>
+                <td class="stat-col">{{ t.PP }}</td><td class="stat-col">{{ t.GF }}</td><td class="stat-col">{{ t.GC }}</td>
+                <td class="stat-col">{{ t.DG > 0 ? '+' + t.DG : t.DG }}</td><td class="stat-col">{{ t.clean_sheets }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+          <p class="crud-hint">Incluye todas las fases (grupos y eliminatoria). Haz clic en los encabezados para ordenar.</p>
+        </p-tabPanel>
+
+        <!-- Fair play -->
+        <p-tabPanel header="Fair play">
+          <p class="crud-hint">Puntos de penalización: amarilla y roja según las reglas del torneo (menos es mejor). La acumulación de amarillas se ve por jugador.</p>
+          <div class="fair-grid">
+            <div>
+              <h4 class="fair-title">Por equipo</h4>
+              <p-table [value]="teamsByFairPlay()" responsiveLayout="scroll">
+                <ng-template pTemplate="header"><tr><th>Equipo</th><th class="stat-col">🟨</th><th class="stat-col">🟥</th><th class="stat-col">Pts</th></tr></ng-template>
+                <ng-template pTemplate="body" let-t>
+                  <tr>
+                    <td><span class="crud-swatch" [style.background]="t.primary_color || '#d1d5db'"></span>{{ t.team_name }}</td>
+                    <td class="stat-col">{{ t.yellow_cards }}</td><td class="stat-col">{{ t.red_cards }}</td>
+                    <td class="stat-col crud-strong">{{ t.fair_play }}</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+            <div>
+              <h4 class="fair-title">Por jugador</h4>
+              <p class="crud-muted" *ngIf="!fairPlayPlayers().length">Sin tarjetas.</p>
+              <p-table *ngIf="fairPlayPlayers().length" [value]="fairPlayPlayers()" responsiveLayout="scroll">
+                <ng-template pTemplate="header"><tr><th>Jugador</th><th>Equipo</th><th class="stat-col">🟨</th><th class="stat-col">🟥</th><th class="stat-col">Pts</th></tr></ng-template>
+                <ng-template pTemplate="body" let-r>
+                  <tr>
+                    <td><ng-container *ngTemplateOutlet="playerCell; context: { $implicit: r }"></ng-container></td>
+                    <td class="crud-muted">{{ r.team_name }}</td>
+                    <td class="stat-col">{{ r.yellow_cards }}</td><td class="stat-col">{{ r.red_cards }}</td>
+                    <td class="stat-col crud-strong">{{ r.penalty_points }}</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </div>
+        </p-tabPanel>
+
+        <!-- Sanciones -->
+        <p-tabPanel [header]="'Sanciones' + (pendingCount() ? ' (' + pendingCount() + ')' : '')">
+          <p class="crud-hint">
+            Roja directa o doble amarilla = suspensión automática. Se marca cumplida sola cuando el equipo juega los partidos de suspensión.
+            Una sanción apelada no impide jugar.
+          </p>
+          <p class="crud-muted" *ngIf="!sanctions().length">No hay sanciones en este torneo.</p>
+          <p-table *ngIf="sanctions().length" [value]="sanctions()" responsiveLayout="scroll">
+            <ng-template pTemplate="header">
+              <tr><th>Jugador</th><th>Equipo</th><th>Motivo</th><th class="stat-col">Partidos</th><th>Estatus</th><th class="crud-end">Acciones</th></tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-s>
+              <tr>
+                <td><ng-container *ngTemplateOutlet="playerCell; context: { $implicit: s }"></ng-container></td>
+                <td class="crud-muted">{{ s.team_name }}</td>
+                <td>{{ s.reason }}</td>
+                <td class="stat-col">{{ s.matches_suspended }}</td>
+                <td><p-tag [value]="sanctionStatus[s.status].label" [severity]="sanctionStatus[s.status].severity" /></td>
+                <td>
+                  <div class="crud-actions">
+                    <p-button *ngIf="s.status !== 'served'" [label]="s.status === 'appealed' ? 'Quitar apelación' : 'Apelar'"
+                      size="small" [text]="true" [loading]="busyId() === s.id" (onClick)="appeal(s)" />
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+      </p-tabView>
+    </div>
+  </ng-container>
+</div>
+
+<app-player-detail [playerId]="detailPlayerId" (closed)="detailPlayerId = null" />

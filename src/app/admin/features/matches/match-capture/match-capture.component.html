@@ -48,11 +48,6 @@
 
       <div class="scoreboard__actions">
         <ng-container *ngIf="canCapture()">
-          <span class="minute-field">
-            <label for="minute">Minuto</label>
-            <p-inputNumber inputId="minute" [(ngModel)]="minute" [min]="0" [max]="200" [placeholder]="elapsed() ? '' + elapsed() : '—'"
-              [inputStyle]="{ width: '72px' }" />
-          </span>
           <p-button label="Finalizar partido" icon="pi pi-check-circle" severity="success" [disabled]="busy() || !m.home_team_id || !m.away_team_id"
             (onClick)="openFinish()" />
         </ng-container>
@@ -78,7 +73,7 @@
             {{ (side === 'home' ? m.home_team : m.away_team) || 'Por definir' }}
           </span>
           <p-button *ngIf="canCapture()" label="Gol" icon="pi pi-plus" size="small" [text]="true" [disabled]="busy()"
-            (onClick)="openGoal($any(side))" />
+            (onClick)="openEvent($any(side), 'goal')" />
         </header>
 
         <p class="crud-muted roster__empty" *ngIf="players($any(side)).length === 0">Este equipo no tiene jugadores registrados.</p>
@@ -99,10 +94,10 @@
               <span *ngIf="cardsInMatch(p, 'red_card')">🟥</span>
             </span>
             <span class="roster__actions" *ngIf="canCapture()">
-              <button type="button" class="ev-btn" [disabled]="busy()" (click)="openGoal($any(side), p)" title="Gol" aria-label="Gol">⚽</button>
-              <button type="button" class="ev-btn ev-btn--og" [disabled]="busy()" (click)="register($any(side), 'own_goal', p.id)" title="Autogol" aria-label="Autogol">AG</button>
-              <button type="button" class="ev-btn" [disabled]="busy() || isExpelled(p)" (click)="card($any(side), p, 'yellow_card')" title="Amarilla" aria-label="Tarjeta amarilla"><span class="card card--yellow"></span></button>
-              <button type="button" class="ev-btn" [disabled]="busy() || isExpelled(p)" (click)="card($any(side), p, 'red_card')" title="Roja" aria-label="Tarjeta roja"><span class="card card--red"></span></button>
+              <button type="button" class="ev-btn" [disabled]="busy()" (click)="openEvent($any(side), 'goal', p)" title="Gol" aria-label="Gol">⚽</button>
+              <button type="button" class="ev-btn ev-btn--og" [disabled]="busy()" (click)="openEvent($any(side), 'own_goal', p)" title="Autogol" aria-label="Autogol">AG</button>
+              <button type="button" class="ev-btn" [disabled]="busy() || isExpelled(p)" (click)="openEvent($any(side), 'yellow_card', p)" title="Amarilla" aria-label="Tarjeta amarilla"><span class="card card--yellow"></span></button>
+              <button type="button" class="ev-btn" [disabled]="busy() || isExpelled(p)" (click)="openEvent($any(side), 'red_card', p)" title="Roja" aria-label="Tarjeta roja"><span class="card card--red"></span></button>
             </span>
           </li>
         </ul>
@@ -131,30 +126,46 @@
   </ng-container>
 </div>
 
-<!-- ══ Diálogo: gol ══════════════════════════════════════════════════════════ -->
-<p-dialog [(visible)]="goalVisible" header="Registrar gol" [modal]="true" [style]="{ width: '420px' }" [breakpoints]="{ '575px': '95vw' }">
-  <div class="form-grid" *ngIf="match()">
+<!-- ══ Diálogo: incidencia (gol, autogol, tarjetas) ══════════════════════════ -->
+<p-dialog [(visible)]="eventVisible" [header]="eventTitle()" [modal]="true" [style]="{ width: '480px' }" [breakpoints]="{ '575px': '95vw' }"
+  (onShow)="focusMinute()">
+  <form class="form-grid" *ngIf="match()" (ngSubmit)="saveEvent()">
     <div class="form-grid__full">
-      <label for="g-scorer">Goleador</label>
-      <p-dropdown inputId="g-scorer" [options]="scorerOptions()" optionLabel="label" optionValue="id"
-        [ngModel]="goalScorerId()" (ngModelChange)="setScorer($event)"
-        placeholder="Sin jugador identificado" [showClear]="true" appendTo="body" styleClass="w-full" />
+      <label for="ev-minute">Minuto</label>
+      <p-inputNumber inputId="ev-minute" name="minute" [(ngModel)]="eventMinute" [min]="0" [max]="200" placeholder="Ej. 23" />
+      <small class="field-error" *ngIf="eventMinute === null">Escribe el minuto en que ocurrió.</small>
     </div>
     <div class="form-grid__full">
-      <label for="g-assist">Asistencia (opcional)</label>
-      <p-dropdown inputId="g-assist" [options]="assistOptions()" optionLabel="label" optionValue="id" [(ngModel)]="goalAssistId"
+      <label for="ev-player">{{ eventType() === 'goal' ? 'Goleador' : eventType() === 'own_goal' ? 'Jugador que hizo el autogol' : 'Jugador' }}</label>
+      <p-dropdown inputId="ev-player" name="player" [options]="playerOptions()" optionLabel="label" optionValue="id"
+        [ngModel]="eventPlayerId()" (ngModelChange)="setEventPlayer($event)" [filter]="true" filterBy="label"
+        [placeholder]="eventInvalid() ? 'Elige al jugador' : 'Sin jugador identificado'" [showClear]="eventType() === 'goal' || eventType() === 'own_goal'"
+        appendTo="body" styleClass="w-full" />
+    </div>
+    <div class="form-grid__full" *ngIf="eventType() === 'goal'">
+      <label for="ev-assist">Asistencia (opcional)</label>
+      <p-dropdown inputId="ev-assist" name="assist" [options]="assistOptions()" optionLabel="label" optionValue="id" [(ngModel)]="eventAssistId"
         placeholder="Sin asistencia" [showClear]="true" appendTo="body" styleClass="w-full" />
     </div>
-    <p class="crud-hint form-grid__full">Minuto: {{ minute ?? elapsed() ?? 'sin minuto' }}. Puedes cambiarlo en el campo "Minuto" del marcador.</p>
-  </div>
+    <p class="crud-hint form-grid__full" *ngIf="eventType() === 'own_goal'">El gol se suma al equipo rival.</p>
+    <p class="crud-hint form-grid__full" *ngIf="eventType() === 'yellow_card' && !secondYellow()">
+      El jugador cumple un descanso de {{ detail()?.rules?.yellow_sin_bin_minutes ?? 0 }} min.
+    </p>
+    <p class="field-error form-grid__full" *ngIf="secondYellow()">
+      <i class="pi pi-exclamation-triangle"></i> Es su segunda amarilla: queda expulsado y recibe sanción.
+    </p>
+    <p class="field-error form-grid__full" *ngIf="eventType() === 'red_card'">Queda expulsado y recibe sanción.</p>
+    <button type="submit" hidden></button>
+  </form>
   <ng-template pTemplate="footer">
-    <p-button label="Cancelar" [text]="true" (onClick)="goalVisible = false" />
-    <p-button label="Registrar gol" icon="pi pi-check" (onClick)="saveGoal()" />
+    <p-button label="Cancelar" [text]="true" (onClick)="eventVisible = false" />
+    <p-button label="Registrar" icon="pi pi-check" [severity]="secondYellow() || eventType() === 'red_card' ? 'danger' : undefined"
+      [disabled]="eventMinute === null || eventInvalid()" (onClick)="saveEvent()" />
   </ng-template>
 </p-dialog>
 
 <!-- ══ Diálogo: finalizar ════════════════════════════════════════════════════ -->
-<p-dialog [(visible)]="finishVisible" header="Finalizar partido" [modal]="true" [style]="{ width: '440px' }" [breakpoints]="{ '575px': '95vw' }">
+<p-dialog [(visible)]="finishVisible" header="Finalizar partido" [modal]="true" [style]="{ width: '540px' }" [breakpoints]="{ '575px': '95vw' }">
   <ng-container *ngIf="match() as m">
     <p>Resultado final: <strong>{{ m.home_team }} {{ m.score_home }} – {{ m.score_away }} {{ m.away_team }}</strong></p>
     <ng-container *ngIf="needsPenalties()">

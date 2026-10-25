@@ -6,7 +6,7 @@ import { RouterLink } from '@angular/router';
 import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';
-import { ChipsModule } from 'primeng/chips';
+import { ChipModule } from 'primeng/chip';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { Menu, MenuModule } from 'primeng/menu';
@@ -55,7 +55,7 @@ const fromMinutes = (m: number) => `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
   imports: [
     CommonModule, FormsModule, RouterLink, ...CRUD_UI,
     CdkDropListGroup, CdkDropList, CdkDrag,
-    CalendarModule, CheckboxModule, ChipsModule, DropdownModule, InputNumberModule, MenuModule, MultiSelectModule, SelectButtonModule,
+    CalendarModule, CheckboxModule, ChipModule, DropdownModule, InputNumberModule, MenuModule, MultiSelectModule, SelectButtonModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './tournament-calendar.component.html',
@@ -112,6 +112,8 @@ export class TournamentCalendarComponent implements OnInit {
   genStart: Date | null = null;
   genDays = 7;
   genTimes: string[] = ['09:00', '11:00'];
+  /** Hora elegida en el selector antes de pulsar "Agregar" */
+  genNewTime: Date | null = null;
   genFieldIds: number[] = [];
   genPreview = signal<ScheduleResult | null>(null);
   genError = signal('');
@@ -380,6 +382,20 @@ export class TournamentCalendarComponent implements OnInit {
     if (!this.genStart) this.genStart = this.tournament()?.start_date ? fromIsoDate(this.tournament()!.start_date!) : null;
     if (this.genFieldIds.length === 0) this.genFieldIds = this.fields().slice(0, 2).map((f) => f.id);
     this.genVisible = true;
+  }
+
+  addTime(): void {
+    const d = this.genNewTime;
+    if (!d) return;
+    const t = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    if (!this.genTimes.includes(t)) this.genTimes = [...this.genTimes, t].sort();
+    this.genNewTime = null;
+    this.genPreview.set(null);
+  }
+
+  removeTime(t: string): void {
+    this.genTimes = this.genTimes.filter((x) => x !== t);
+    this.genPreview.set(null);
   }
 
   invalidTimes(): string[] {

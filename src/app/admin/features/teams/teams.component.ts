@@ -14,6 +14,8 @@ import { CRUD_UI } from '../../../core/ui/crud-ui';
 import { notBlank } from '../../../core/ui/validators';
 
 const DEFAULT_COLOR = '#4f46e5';
+/** Teléfono: dígitos, espacios y + ( ) - */
+const PHONE_RE = /^[\d\s+()-]*$/;
 
 @Component({
   standalone: true,
@@ -30,6 +32,9 @@ export class TeamsComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(MessageService);
   private readonly confirm = inject(ConfirmationService);
+
+  /** Teclas permitidas en el teléfono */
+  readonly phoneChars = /[\d\s+()-]/;
 
   items = signal<Team[]>([]);
   categories = signal<Category[]>([]);
@@ -50,14 +55,15 @@ export class TeamsComponent implements OnInit {
       .map((c) => ({ id: c.id, label: c.active === 1 ? c.name : `${c.name} (inactivo)` }));
   });
 
-  // teams: name varchar(100), short_name varchar(10), contact_email varchar(150), contact_phone varchar(30)
+  // teams: name varchar(100), short_name varchar(10), contact_name varchar(150), contact_email varchar(150), contact_phone varchar(30)
   form = this.fb.nonNullable.group({
     name: ['', [Validators.required, notBlank, Validators.maxLength(100)]],
     short_name: ['', [Validators.maxLength(10)]],
     category_id: this.fb.control<number | null>(null, [Validators.required]),
     primary_color: [DEFAULT_COLOR, [Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
+    contact_name: ['', [Validators.maxLength(150)]],
     contact_email: ['', [Validators.email, Validators.maxLength(150)]],
-    contact_phone: ['', [Validators.maxLength(30)]],
+    contact_phone: ['', [Validators.maxLength(30), Validators.pattern(PHONE_RE)]],
     coach_ids: [[] as number[]],
   });
 
@@ -97,6 +103,7 @@ export class TeamsComponent implements OnInit {
       short_name: '',
       category_id: null,
       primary_color: DEFAULT_COLOR,
+      contact_name: '',
       contact_email: '',
       contact_phone: '',
       coach_ids: [],
@@ -112,6 +119,7 @@ export class TeamsComponent implements OnInit {
       short_name: team.short_name ?? '',
       category_id: team.category_id,
       primary_color: team.primary_color || DEFAULT_COLOR,
+      contact_name: team.contact_name ?? '',
       contact_email: team.contact_email ?? '',
       contact_phone: team.contact_phone ?? '',
       coach_ids: team.coaches.map((c) => c.id),
@@ -120,7 +128,7 @@ export class TeamsComponent implements OnInit {
     this.dialogVisible = true;
   }
 
-  fieldInvalid(name: 'name' | 'short_name' | 'category_id' | 'contact_email' | 'contact_phone'): boolean {
+  fieldInvalid(name: 'name' | 'short_name' | 'category_id' | 'contact_name' | 'contact_email' | 'contact_phone'): boolean {
     const c = this.form.controls[name];
     return c.invalid && (c.touched || c.dirty);
   }
@@ -136,6 +144,7 @@ export class TeamsComponent implements OnInit {
       category_id: raw.category_id as number,
       short_name: raw.short_name.trim(),
       primary_color: raw.primary_color,
+      contact_name: raw.contact_name.trim(),
       contact_email: raw.contact_email.trim(),
       contact_phone: raw.contact_phone.trim(),
       coach_ids: raw.coach_ids,

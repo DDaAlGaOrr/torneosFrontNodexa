@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { DropdownModule } from 'primeng/dropdown';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { PasswordModule } from 'primeng/password';
 import { SelectButtonModule } from 'primeng/selectbutton';
@@ -21,7 +22,7 @@ interface RoleTab {
 @Component({
   standalone: true,
   selector: 'app-users',
-  imports: [CommonModule, ReactiveFormsModule, ...CRUD_UI, InputSwitchModule, PasswordModule, SelectButtonModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, ...CRUD_UI, DropdownModule, InputSwitchModule, PasswordModule, SelectButtonModule],
   providers: [MessageService, ConfirmationService],
   templateUrl: './users.component.html',
   styleUrls: ['../../../../styles/crud.scss'],
@@ -52,6 +53,19 @@ export class UsersComponent implements OnInit {
   formError = signal('');
 
   currentTab = computed(() => this.tabs.find((t) => t.role === this.role())!);
+
+  // ── Cambiar rol ───────────────────────────────────────────────────────────
+  roleVisible = false;
+  roleUser: ManagedUser | null = null;
+  newRole: ManagedRole | null = null;
+  roleError = signal('');
+  roleOptions = computed(() => this.tabs.filter((t) => t.role !== this.role()).map((t) => ({ value: t.role, label: t.singular[0].toUpperCase() + t.singular.slice(1) })));
+
+  // ── Restablecer contraseña ────────────────────────────────────────────────
+  passVisible = false;
+  passUser: ManagedUser | null = null;
+  newPassword = '';
+  passError = signal('');
 
   // users: name varchar(100), email varchar(150)
   form = this.fb.nonNullable.group({
@@ -141,6 +155,68 @@ export class UsersComponent implements OnInit {
       error: (err) => {
         this.saving.set(false);
         this.formError.set(apiErrorMessage(err, 'No se pudo guardar el usuario'));
+      },
+    });
+  }
+
+  openRole(user: ManagedUser): void {
+    this.roleUser = user;
+    this.newRole = null;
+    this.roleError.set('');
+    this.roleVisible = true;
+  }
+
+  /** Qué pasa con sus asignaciones al dejar el rol actual */
+  roleWarning(): string {
+    if (this.role() === 'coach') return 'Dejará de ser entrenador de sus equipos.';
+    if (this.role() === 'referee') return 'Se quitará de los partidos que aún no terminan (los finalizados conservan el historial).';
+    return '';
+  }
+
+  saveRole(): void {
+    const user = this.roleUser;
+    if (!user || !this.newRole) return;
+    const target = this.tabs.find((t) => t.role === this.newRole)!;
+    this.saving.set(true);
+    this.api.changeRole(this.role(), user.id, this.newRole).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.roleVisible = false;
+        this.toast.add({ severity: 'success', summary: 'Rol actualizado', detail: `${user.name} ahora es ${target.singular}. Verá su nuevo panel al volver a iniciar sesión.`, life: 6000 });
+        this.load();
+      },
+      error: (err) => {
+        this.saving.set(false);
+        this.roleError.set(apiErrorMessage(err));
+      },
+    });
+  }
+
+  openPassword(user: ManagedUser): void {
+    this.passUser = user;
+    this.newPassword = '';
+    this.passError.set('');
+    this.passVisible = true;
+  }
+
+  savePassword(): void {
+    const user = this.passUser;
+    if (!user) return;
+    if (this.newPassword.length < 8 || this.newPassword.length > 72) {
+      this.passError.set('La contraseña debe tener entre 8 y 72 caracteres');
+      return;
+    }
+    this.saving.set(true);
+    this.api.resetPassword(this.role(), user.id, this.newPassword).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.passVisible = false;
+        this.newPassword = '';
+        this.toast.add({ severity: 'success', summary: 'Contraseña actualizada', detail: `Comparte la nueva contraseña con ${user.name} por un medio seguro.`, life: 6000 });
+      },
+      error: (err) => {
+        this.saving.set(false);
+        this.passError.set(apiErrorMessage(err));
       },
     });
   }

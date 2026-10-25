@@ -13,6 +13,11 @@ export interface Player {
   position: string | null;
   status: PlayerStatus;
   photo_url: string | null;
+  /** Totales (de un torneo o de todos) */
+  goals?: number;
+  assists?: number;
+  yellow_cards?: number;
+  red_cards?: number;
 }
 
 export interface CreatePlayerPayload {
@@ -30,8 +35,10 @@ export class PlayersApi {
   private readonly http = inject(HttpClient);
   private readonly url = `${URL_API}/players`;
 
-  listByTeam(teamId: number): Observable<ApiResponse<Player[]>> {
-    return this.http.get<ApiResponse<Player[]>>(`${this.url}/team/${teamId}`);
+  /** Con `tournamentId` los totales son de ese torneo; sin él, de todos */
+  listByTeam(teamId: number, tournamentId?: number | null): Observable<ApiResponse<Player[]>> {
+    const query = tournamentId ? `?tournament_id=${tournamentId}` : '';
+    return this.http.get<ApiResponse<Player[]>>(`${this.url}/team/${teamId}${query}`);
   }
   create(teamId: number, body: CreatePlayerPayload): Observable<ApiResponse<Player>> {
     return this.http.post<ApiResponse<Player>>(this.url, { team_id: teamId, ...body });

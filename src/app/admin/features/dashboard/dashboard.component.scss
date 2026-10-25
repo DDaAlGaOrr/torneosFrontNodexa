@@ -1,0 +1,438 @@
+$border: #e8eaf0;
+$text-primary: #1a1d2e;
+$text-secondary: #8b8fa8;
+$accent: #4f46e5;
+$live: #10b981;
+
+// ── Indicador "En vivo" ─────────────────────────────────────────────────────
+.dash-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #b45309;
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  &--on {
+    color: $live;
+
+    .dash-live__dot {
+      animation: dash-pulse 1.4s ease-in-out infinite;
+    }
+  }
+}
+
+:host ::ng-deep .dash-select {
+  min-width: 240px;
+}
+
+// ── Indicadores ─────────────────────────────────────────────────────────────
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  color: inherit;
+  text-decoration: none;
+
+  &__label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $text-secondary;
+
+    i {
+      margin-right: 4px;
+      font-size: 12px;
+    }
+  }
+
+  strong {
+    font-size: 28px;
+    line-height: 1.15;
+    color: $text-primary;
+    font-variant-numeric: tabular-nums;
+  }
+
+  small {
+    font-size: 12px;
+  }
+
+  &__bar {
+    height: 5px;
+    margin-top: 6px;
+    border-radius: 999px;
+    background: #eef0f6;
+    overflow: hidden;
+
+    span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: $accent;
+      transition: width 0.6s ease;
+    }
+  }
+
+  &--link:hover {
+    border-color: #c7d2fe;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+  }
+
+  &--alert strong {
+    color: #dc2626;
+  }
+}
+
+// ── Secciones ───────────────────────────────────────────────────────────────
+.dgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 16px;
+}
+
+.dsection {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  &--live {
+    margin-bottom: 16px;
+    border-color: #a7f3d0;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.08);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid $border;
+
+    .match-live-dot {
+      margin-right: 6px;
+    }
+  }
+
+  &__link {
+    font-size: 13px;
+  }
+
+  &__sub {
+    margin: 8px 16px 0;
+    font-size: 12.5px;
+  }
+
+  &__empty {
+    margin: 0;
+    padding: 16px;
+  }
+}
+
+.dlist {
+  display: flex;
+  flex-direction: column;
+}
+
+// ── Fila de partido ─────────────────────────────────────────────────────────
+.dmatch {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  grid-template-areas:
+    'when teams score'
+    'when meta  meta';
+  align-items: center;
+  gap: 2px 10px;
+  width: 100%;
+  padding: 9px 16px;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid $border;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: #f8f9fc;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $accent;
+    outline-offset: -2px;
+  }
+
+  // Acaba de cambiar (gol, resultado...)
+  &--flash {
+    animation: dash-flash 2.4s ease-out;
+  }
+
+  &__when {
+    grid-area: when;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: $text-primary;
+    font-variant-numeric: tabular-nums;
+
+    small {
+      font-size: 11px;
+      font-weight: 500;
+      color: $text-secondary;
+    }
+  }
+
+  &__teams {
+    grid-area: teams;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    font-size: 14px;
+  }
+
+  &__team {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &--win {
+      font-weight: 700;
+    }
+  }
+
+  &__score {
+    grid-area: score;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-weight: 700;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+
+    small {
+      font-size: 10.5px;
+      font-weight: 500;
+      color: $text-secondary;
+    }
+
+    &--tag {
+      justify-content: center;
+    }
+  }
+
+  &__meta {
+    grid-area: meta;
+    font-size: 12px;
+    color: $text-secondary;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &--live .dmatch__score {
+    color: $live;
+  }
+}
+
+// ── Tabla rápida ────────────────────────────────────────────────────────────
+.qtable {
+  padding: 4px 16px 8px;
+
+  &__group {
+    margin: 8px 0 2px;
+    font-size: 12px;
+    font-weight: 700;
+    color: $accent;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) 32px 40px 36px;
+    gap: 6px;
+    padding: 5px 0;
+    border-bottom: 1px solid $border;
+    font-size: 13.5px;
+    font-variant-numeric: tabular-nums;
+
+    span:nth-child(n + 3),
+    strong {
+      text-align: center;
+    }
+
+    &--head {
+      font-size: 11px;
+      font-weight: 700;
+      color: $text-secondary;
+      text-transform: uppercase;
+    }
+  }
+
+  &__pos {
+    font-weight: 700;
+    color: $accent;
+  }
+
+  &__name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__more {
+    padding-top: 4px;
+    font-size: 12px;
+  }
+}
+
+// ── Estadísticas ────────────────────────────────────────────────────────────
+.dstats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 12px 16px;
+
+  &__title {
+    margin: 0 0 8px;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: $text-secondary;
+  }
+}
+
+.dscorer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 13.5px;
+
+  &__pos {
+    width: 18px;
+    font-weight: 700;
+    color: $accent;
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.dhl {
+  padding: 4px 0;
+  font-size: 13.5px;
+}
+
+.dbars {
+  padding: 4px 16px 16px;
+
+  &__chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 120px;
+    padding-top: 16px;
+    overflow-x: auto;
+  }
+
+  &__col {
+    flex: 1 0 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+  }
+
+  &__value {
+    font-size: 11px;
+    font-weight: 700;
+    color: $text-primary;
+  }
+
+  &__bar {
+    width: 100%;
+    max-width: 36px;
+    min-height: 3px;
+    border-radius: 6px 6px 0 0;
+    background: linear-gradient(180deg, #818cf8, $accent);
+    transition: height 0.6s ease;
+  }
+
+  &__label {
+    margin-top: 4px;
+    font-size: 11px;
+    color: $text-secondary;
+  }
+}
+
+@keyframes dash-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes dash-flash {
+  0% {
+    background: #d1fae5;
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-live--on .dash-live__dot,
+  .dmatch--flash {
+    animation: none;
+  }
+}
+
+@media (max-width: 575px) {
+  .dgrid {
+    grid-template-columns: 1fr;
+  }
+
+  // En el celular, indicadores en dos columnas para no desplazar tanto
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .kpi {
+    padding: 10px 12px;
+
+    strong {
+      font-size: 22px;
+    }
+  }
+
+  :host ::ng-deep .dash-select {
+    min-width: 0;
+    width: 100%;
+  }
+}
