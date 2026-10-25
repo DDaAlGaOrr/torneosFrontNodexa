@@ -195,13 +195,19 @@ $font-sans: 'DM Sans', 'Segoe UI', sans-serif;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: $text-secondary;
+  color: $text-primary;
+  font-size: 20px;
   flex-shrink: 0;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 
-  /* &:hover {
+  &:hover {
     background: $accent-light;
-    border-color: $accent;
     color: $accent;
-  } */
+  }
+}
+
+@media (max-width: 575px) {
+  .topbar {
+    padding: 0 16px;
+  }
 }

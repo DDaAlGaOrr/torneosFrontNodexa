@@ -30,6 +30,7 @@ $font-sans: 'DM Sans', 'Segoe UI', sans-serif;
 
 // ─── Brand ────────────────────────────────────────────────────────────────────
 .sidebar__brand {
+  flex-shrink: 0;
   padding: 20px 18px 16px;
   border-bottom: 1px solid $sidebar-border;
   margin-bottom: 8px;
@@ -137,6 +138,7 @@ $font-sans: 'DM Sans', 'Segoe UI', sans-serif;
   display: flex;
   align-items: center;
   color: $text-muted;
+  font-size: 12px;
   transition: transform 0.2s ease;
 
   &--open {
@@ -213,34 +215,22 @@ $font-sans: 'DM Sans', 'Segoe UI', sans-serif;
   }
 }
 
-// ─── Offcanvas overrides ──────────────────────────────────────────────────────
-.offcanvas {
-  width: $sidebar-width !important;
+// ─── Panel deslizable (p-sidebar) en móvil / tablet ──────────────────────────
+:host ::ng-deep .sidebar-drawer.p-sidebar {
+  width: 260px;
   font-family: $font-sans;
 
-  .offcanvas-header {
-    .sidebar__brand-icon {
-      width: 30px;
-      height: 30px;
-      background: $accent;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      flex-shrink: 0;
-    }
+  .p-sidebar-header {
+    padding: 0 8px 0 0;
+    border-bottom: 1px solid $sidebar-border;
 
-    .sidebar__brand-name {
-      font-size: 15px;
-      font-weight: 700;
-      color: $text-primary;
-      letter-spacing: -0.02em;
+    .sidebar__brand {
+      border-bottom: none;
+      margin-bottom: 0;
     }
   }
 
-  .offcanvas-body {
-    padding: 0;
-    overflow-x: hidden;
+  .p-sidebar-content {
+    padding: 8px 0 16px;
   }
 }

@@ -1,0 +1,224 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="crud-page">
+  <div class="crud-page__header">
+    <div>
+      <h2 class="crud-page__title">Torneos</h2>
+      <p class="crud-page__subtitle">Crea los torneos de tu liga e inscribe a sus equipos.</p>
+    </div>
+    <p-button label="Nuevo torneo" icon="pi pi-plus" (onClick)="openCreate()" />
+  </div>
+
+  <div class="crud-alert" *ngIf="loadError()" role="alert">
+    <span>{{ loadError() }}</span>
+    <button type="button" aria-label="Reintentar" (click)="load()">↻</button>
+  </div>
+
+  <div class="crud-card">
+    <p-table
+      #dt
+      [value]="items()"
+      [loading]="loading()"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [globalFilterFields]="['name', 'sport_name', 'category_name']"
+      currentPageReportTemplate="Mostrando {first}–{last} de {totalRecords}"
+      [showCurrentPageReport]="true"
+      responsiveLayout="scroll"
+      dataKey="id"
+    >
+      <ng-template pTemplate="caption">
+        <div class="crud-toolbar">
+          <span class="p-input-icon-left crud-search">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" placeholder="Buscar por nombre, deporte o categoría..."
+              (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="name">Torneo <p-sortIcon field="name" /></th>
+          <th pSortableColumn="sport_name">Deporte <p-sortIcon field="sport_name" /></th>
+          <th pSortableColumn="category_name">Categoría <p-sortIcon field="category_name" /></th>
+          <th>Formato</th>
+          <th pSortableColumn="teams_count">Equipos <p-sortIcon field="teams_count" /></th>
+          <th pSortableColumn="status">Estatus <p-sortIcon field="status" /></th>
+          <th>Fechas</th>
+          <th class="crud-end">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-t>
+        <tr>
+          <td>
+            <div class="tournaments__name">{{ t.name }}</div>
+            <div class="tournaments__sub" *ngIf="t.description">{{ t.description | slice: 0 : 70 }}{{ t.description.length > 70 ? '…' : '' }}</div>
+          </td>
+          <td>{{ t.sport_name }}</td>
+          <td>{{ t.category_name || '—' }}</td>
+          <td>{{ formatLabel(t.format) }}</td>
+          <td class="tournaments__count">
+            <a class="crud-link" role="button" tabindex="0" (click)="openEnrollments(t)" (keyup.enter)="openEnrollments(t)">
+              {{ t.teams_count }} / {{ t.max_teams }}
+            </a>
+          </td>
+          <td>
+            <p-tag [value]="statusLabel(t.status)" [severity]="severity(t.status)" />
+          </td>
+          <td class="crud-muted">
+            <ng-container *ngIf="t.start_date || t.end_date; else noDates">
+              {{ t.start_date ? (t.start_date | date: 'dd MMM yyyy') : '…' }} – {{ t.end_date ? (t.end_date | date: 'dd MMM yyyy') : '…' }}
+            </ng-container>
+            <ng-template #noDates>—</ng-template>
+          </td>
+          <td>
+            <div class="crud-actions">
+              <a pButton icon="pi pi-calendar" class="p-button-rounded p-button-text" pTooltip="Calendario"
+                tooltipPosition="top" aria-label="Calendario" [routerLink]="['/admin/torneos', t.id, 'calendario']"></a>
+              <a *ngIf="t.format !== 'league'" pButton icon="pi pi-sitemap" class="p-button-rounded p-button-text" pTooltip="Eliminatoria (llaves)"
+                tooltipPosition="top" aria-label="Eliminatoria" [routerLink]="['/admin/torneos', t.id, 'llaves']"></a>
+              <a pButton icon="pi pi-list" class="p-button-rounded p-button-text" pTooltip="Partidos y resultados"
+                tooltipPosition="top" aria-label="Partidos y resultados" [routerLink]="['/admin/torneos', t.id, 'partidos']"></a>
+              <p-button icon="pi pi-users" [rounded]="true" [text]="true" pTooltip="Equipos inscritos" tooltipPosition="top"
+                ariaLabel="Equipos inscritos" (onClick)="openEnrollments(t)" />
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" pTooltip="Editar" tooltipPosition="top"
+                ariaLabel="Editar" (onClick)="openEdit(t)" />
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar"
+                tooltipPosition="top" ariaLabel="Eliminar" (onClick)="remove(t)" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="crud-table__empty"><p>{{ loading() ? 'Cargando...' : 'Todavía no hay torneos. Crea el primero con "Nuevo torneo".' }}</p></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- ══ Crear / editar torneo ═══════════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '640px', maxWidth: '95vw' }"
+  [header]="editing() ? 'Editar torneo' : 'Nuevo torneo'"
+>
+  <form [formGroup]="form" (ngSubmit)="save()" id="tournamentForm" class="form-grid" novalidate>
+    <div class="form-grid__full">
+      <label for="t-name">Nombre</label>
+      <input pInputText id="t-name" formControlName="name" maxlength="150" placeholder="Ej. Copa Primavera 2026" />
+      <small class="field-error" *ngIf="fieldInvalid('name')">Escribe un nombre de al menos 3 caracteres.</small>
+    </div>
+
+    <div>
+      <label for="t-sport">Deporte</label>
+      <p-dropdown inputId="t-sport" [options]="sports()" optionLabel="name" optionValue="id" formControlName="sport_id"
+        placeholder="Selecciona" appendTo="body" />
+      <small class="field-error" *ngIf="fieldInvalid('sport_id')">Selecciona un deporte.</small>
+    </div>
+
+    <div>
+      <label for="t-category">Categoría</label>
+      <p-dropdown inputId="t-category" [options]="categories()" optionLabel="name" optionValue="id" formControlName="category_id"
+        placeholder="Selecciona" [showClear]="false" appendTo="body" />
+      <small class="field-error" *ngIf="fieldInvalid('category_id')">Selecciona una categoría.</small>
+    </div>
+
+    <div>
+      <label for="t-format">Formato</label>
+      <p-dropdown inputId="t-format" [options]="formats" optionLabel="label" optionValue="value" formControlName="format"
+        placeholder="Selecciona" appendTo="body" />
+      <small class="field-error" *ngIf="fieldInvalid('format')">Selecciona un formato.</small>
+    </div>
+
+    <div>
+      <label for="t-max">Máximo de equipos</label>
+      <p-inputNumber inputId="t-max" formControlName="max_teams" [min]="2" [max]="255" [showButtons]="true" />
+      <small class="field-error" *ngIf="fieldInvalid('max_teams')">Debe ser un número entre 2 y 255.</small>
+    </div>
+
+    <div>
+      <label for="t-start">Fecha de inicio</label>
+      <p-calendar inputId="t-start" formControlName="start_date" dateFormat="yy-mm-dd" [showIcon]="true" [showButtonBar]="true"
+        appendTo="body" placeholder="AAAA-MM-DD" />
+    </div>
+
+    <div>
+      <label for="t-end">Fecha de fin</label>
+      <p-calendar inputId="t-end" formControlName="end_date" dateFormat="yy-mm-dd" [showIcon]="true" [showButtonBar]="true"
+        appendTo="body" placeholder="AAAA-MM-DD" />
+    </div>
+    <small class="field-error form-grid__full" *ngIf="form.hasError('dateRange')">La fecha de fin no puede ser anterior a la de inicio.</small>
+
+    <div class="form-grid__full" *ngIf="editing()">
+      <label for="t-status">Estatus</label>
+      <p-dropdown inputId="t-status" [options]="statuses" optionLabel="label" optionValue="value" formControlName="status"
+        appendTo="body" />
+    </div>
+
+    <div class="form-grid__full">
+      <label for="t-desc">Descripción (opcional)</label>
+      <textarea pInputTextarea id="t-desc" formControlName="description" rows="3" maxlength="2000"></textarea>
+    </div>
+  </form>
+
+  <div class="form-alert" *ngIf="formError()" role="alert">{{ formError() }}</div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="dialogVisible = false" />
+    <p-button [label]="editing() ? 'Guardar cambios' : 'Crear torneo'" icon="pi pi-check" [loading]="saving()"
+      (onClick)="save()" />
+  </ng-template>
+</p-dialog>
+
+<!-- ══ Equipos inscritos ═══════════════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="enrollVisible"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '560px', maxWidth: '95vw' }"
+  [header]="'Equipos — ' + (enrollTournament()?.name ?? '')"
+>
+  <p class="enroll__hint">
+    {{ confirmedCount() }} de {{ enrollTournament()?.max_teams }} equipos inscritos.
+    <ng-container *ngIf="enrollTournament()?.category_name">Solo se ofrecen equipos de la categoría {{ enrollTournament()?.category_name }}.</ng-container>
+  </p>
+
+  <div class="enroll__add">
+    <p-dropdown [options]="availableTeams()" optionLabel="name" optionValue="id" [formControl]="teamCtrl"
+      [filter]="true" filterBy="name" placeholder="Selecciona un equipo" appendTo="body"
+      [disabled]="isFull() || enrollBusy()" emptyMessage="No hay equipos disponibles" />
+    <p-button label="Inscribir" icon="pi pi-plus" [disabled]="!teamCtrl.value || isFull() || enrollBusy()"
+      (onClick)="enrollSelected()" />
+  </div>
+  <p class="enroll__hint" *ngIf="isFull()">El torneo alcanzó su máximo de equipos. Sube el máximo al editar el torneo o da de baja a un equipo.</p>
+
+  <p-table [value]="enrolled()" [loading]="enrollLoading()" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr><th>Equipo</th><th>Estado</th><th class="crud-end">Acciones</th></tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-e>
+      <tr>
+        <td>{{ e.name }} <span class="crud-muted" *ngIf="e.short_name">({{ e.short_name }})</span></td>
+        <td><p-tag [value]="enrollmentLabel(e)" [severity]="enrollmentSeverity(e)" /></td>
+        <td class="crud-end">
+          <p-button *ngIf="e.enrollment_status !== 'withdrawn'" label="Dar de baja" [text]="true" severity="danger" size="small"
+            [disabled]="enrollBusy()" (onClick)="withdraw(e)" />
+          <p-button *ngIf="e.enrollment_status === 'withdrawn'" label="Reinscribir" [text]="true" size="small"
+            [disabled]="enrollBusy() || isFull()" (onClick)="reenroll(e)" />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="3" class="crud-table__empty"><p>{{ enrollLoading() ? 'Cargando...' : 'Aún no hay equipos inscritos' }}</p></td></tr>
+    </ng-template>
+  </p-table>
+</p-dialog>

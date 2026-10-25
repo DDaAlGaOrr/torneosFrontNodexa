@@ -1,0 +1,218 @@
+// Estilos compartidos de las pantallas de administración (estructura de página y formularios).
+// Los controles (tablas, botones, diálogos, campos) vienen de PrimeNG.
+$accent: #4f46e5;
+$text-primary: #1a1d2e;
+$text-secondary: #8b8fa8;
+$border: #e8eaf0;
+
+.crud-page {
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+    color: $text-primary;
+    letter-spacing: -0.03em;
+    margin-bottom: 4px;
+  }
+
+  &__subtitle {
+    font-size: 13.5px;
+    color: $text-secondary;
+    margin: 0;
+  }
+}
+
+.crud-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid $border;
+  overflow: hidden;
+}
+
+.crud-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.crud-search {
+  min-width: 260px;
+}
+
+.crud-search input {
+  width: 100%;
+}
+
+.crud-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.crud-end {
+  text-align: right;
+}
+
+.crud-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+
+  button {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+  }
+}
+
+.crud-link {
+  color: $accent;
+  text-decoration: none;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.crud-muted {
+  color: $text-secondary;
+}
+
+.crud-strong {
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.crud-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: $text-secondary;
+}
+
+.crud-table__empty {
+  padding: 28px 12px;
+  text-align: center;
+  color: $text-secondary;
+}
+
+.crud-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  vertical-align: middle;
+}
+
+.crud-back {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: $text-secondary;
+  font-size: 13px;
+  text-decoration: none;
+
+  &:hover {
+    color: $accent;
+  }
+}
+
+.crud-color-input {
+  width: 100%;
+  height: 40px;
+  padding: 3px 5px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+// Los enlaces con aspecto de botón (<a pButton>) heredaban el color y el subrayado de los enlaces
+// de Bootstrap, que no está en una capa CSS y por eso gana a PrimeNG (@layer primeng).
+a.p-button,
+a.p-button:hover,
+a.p-button:focus {
+  text-decoration: none;
+  color: #fff;
+}
+
+a.p-button.p-button-outlined,
+a.p-button.p-button-text {
+  color: #6366f1; // primario del tema lara-light-indigo
+}
+
+// ─── Formularios en diálogo ───────────────────────────────────────────────────
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+
+  label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  input.p-inputtext,
+  textarea {
+    width: 100%;
+  }
+
+  &__full {
+    grid-column: 1 / -1;
+  }
+}
+
+:host ::ng-deep .form-grid .p-calendar,
+:host ::ng-deep .form-grid .p-dropdown,
+:host ::ng-deep .form-grid .p-multiselect,
+:host ::ng-deep .form-grid .p-inputnumber,
+:host ::ng-deep .form-grid .p-password,
+:host ::ng-deep .form-grid .p-password input {
+  width: 100%;
+}
+
+.field-error {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #dc2626;
+}
+
+.form-alert {
+  margin-top: 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

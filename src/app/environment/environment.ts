@@ -1,1 +1,2 @@
-export const URL_API = 'https://torneo-fesja-2026-production.up.railway.app/api' 
+// Desarrollo: API local (levanta la API con `npm run dev` en su carpeta; puerto 3000 por defecto)
+export const URL_API = 'http://localhost:3000/api';

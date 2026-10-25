@@ -1,22 +1,11 @@
 <div class="app-layout">
-
-  <!-- Sidebar -->
   <app-sidebar></app-sidebar>
 
-  <!-- Main Area -->
-  <div class="app-layout__main d-flex flex-column">
+  <div class="app-layout__main flex flex-column">
+    <app-topbar></app-topbar>
 
-    <!-- Topbar -->
-    <app-topbar
-      pageTitle="pageTitle"
-      pageBreadcrumb="pageBreadcrumb"
-    ></app-topbar>
-
-    <!-- Content -->
     <main class="app-layout__content">
       <router-outlet></router-outlet>
     </main>
-
   </div>
-
 </div>

@@ -1,0 +1,350 @@
+$text-primary: #1a1d2e;
+$text-secondary: #8b8fa8;
+$border: #e8eaf0;
+$accent: #4f46e5;
+
+.scoreboard {
+  padding: 20px 24px;
+  margin-bottom: 16px;
+
+  &__meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: $text-secondary;
+  }
+
+  &__main {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 16px;
+    margin: 20px 0 16px;
+  }
+
+  &__team {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+
+    &--away {
+      flex-direction: row-reverse;
+      text-align: right;
+    }
+  }
+
+  &__badge {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  &__name {
+    font-size: 18px;
+    font-weight: 700;
+    color: $text-primary;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__score {
+    text-align: center;
+    font-size: 44px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: $text-primary;
+  }
+
+  &__dash {
+    margin: 0 10px;
+    color: $text-secondary;
+  }
+
+  &__pens,
+  &__clock {
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: $text-secondary;
+  }
+
+  &__clock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #10b981;
+  }
+
+  &__info {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 18px;
+    font-size: 13px;
+
+    i {
+      margin-right: 4px;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid $border;
+  }
+}
+
+.minute-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: $text-secondary;
+}
+
+.sin-bins {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.sin-bin {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fef9c3;
+  color: #854d0e;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rosters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.roster {
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid $border;
+  }
+
+  &__empty {
+    padding: 16px;
+    margin: 0;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__player {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border-bottom: 1px solid $border;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &--out {
+      background: #fef2f2;
+
+      .roster__name {
+        text-decoration: line-through;
+        text-decoration-color: rgba(185, 28, 28, 0.5);
+      }
+    }
+  }
+
+  &__number {
+    flex: none;
+    width: 30px;
+    text-align: center;
+    font-weight: 700;
+    color: $accent;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    font-size: 14px;
+    color: $text-primary;
+  }
+
+  &__acc {
+    font-size: 11.5px;
+    color: $text-secondary;
+  }
+
+  &__marks {
+    flex: none;
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+
+  &__actions {
+    flex: none;
+    display: flex;
+    gap: 4px;
+  }
+}
+
+.ev-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid $border;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+
+  &:hover:not(:disabled) {
+    background: #f5f6fa;
+    border-color: #cfd3e0;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  &--og {
+    font-size: 11px;
+    color: #b91c1c;
+  }
+}
+
+.card {
+  display: block;
+  width: 12px;
+  height: 17px;
+  border-radius: 2px;
+
+  &--yellow {
+    background: #facc15;
+  }
+
+  &--red {
+    background: #dc2626;
+  }
+}
+
+.timeline {
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    border-bottom: 1px solid $border;
+    border-left: 3px solid $accent;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &--away {
+      border-left-color: #f59e0b;
+    }
+  }
+
+  &__minute {
+    flex: none;
+    width: 38px;
+    font-weight: 700;
+    color: $text-secondary;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__icon {
+    flex: none;
+  }
+
+  &__text {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 575px) {
+  .scoreboard {
+    padding: 16px;
+
+    &__main {
+      gap: 8px;
+    }
+
+    &__team,
+    &__team--away {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    &__name {
+      font-size: 14px;
+    }
+
+    &__score {
+      font-size: 34px;
+    }
+  }
+
+  .rosters {
+    grid-template-columns: 1fr;
+  }
+
+  .roster__player {
+    flex-wrap: wrap;
+  }
+
+  .roster__actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

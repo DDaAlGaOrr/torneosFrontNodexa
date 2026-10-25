@@ -1,0 +1,226 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+<p-menu #actionsMenu [model]="menuItems" [popup]="true" appendTo="body" />
+
+<!-- ══ Tarjeta de partido (compartida por las dos vistas) ═════════════════════ -->
+<ng-template #card let-m let-compact="compact">
+  <div class="cal-card" [class.cal-card--compact]="compact" [class]="'cal-card--' + m.status">
+    <div class="cal-card__teams">
+      <span class="cal-card__team"><span class="crud-swatch" [style.background]="m.home_color || '#d1d5db'"></span>{{ m.home_team || 'Por definir' }}</span>
+      <span class="cal-card__score" *ngIf="m.status === 'finished' || m.status === 'in_progress'">{{ m.score_home }}–{{ m.score_away }}</span>
+      <span class="cal-card__team"><span class="crud-swatch" [style.background]="m.away_color || '#d1d5db'"></span>{{ m.away_team || 'Por definir' }}</span>
+    </div>
+    <div class="cal-card__meta">
+      <span *ngIf="!compact"><i class="pi pi-clock"></i> {{ formatLocal(m.scheduled_local) }}</span>
+      <span *ngIf="compact && m.scheduled_local"><i class="pi pi-clock"></i> {{ m.scheduled_local | slice: 11 : 16 }}</span>
+      <span *ngIf="!compact && m.field_name"><i class="pi pi-map-marker"></i> {{ m.field_name }}</span>
+      <span *ngIf="compact" class="crud-muted">{{ m.round_name }}</span>
+      <p-tag *ngIf="m.status !== 'scheduled'" [value]="statusLabel(m.status)" [severity]="statusSeverity(m.status)" />
+    </div>
+    <button type="button" class="cal-card__menu" aria-label="Acciones del partido" (mousedown)="$event.stopPropagation()"
+      (click)="openMenu($event, actionsMenu, m)"><i class="pi pi-ellipsis-v"></i></button>
+  </div>
+</ng-template>
+
+<div class="crud-page">
+  <a class="crud-back" [routerLink]="['/admin/torneos', tournamentId, 'partidos']"><i class="pi pi-arrow-left"></i> Volver a los partidos</a>
+
+  <div class="crud-page__header">
+    <div>
+      <h2 class="crud-page__title">{{ tournament()?.name || 'Calendario' }}</h2>
+      <p class="crud-page__subtitle">
+        {{ groupRounds().length }} jornadas · {{ matches().length }} partidos · arrastra las tarjetas para reprogramar
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <p-button label="Generar jornadas" icon="pi pi-sync" (onClick)="openGenerate()"
+        [disabled]="tournament()?.format === 'bracket'"
+        [pTooltip]="tournament()?.format === 'bracket' ? 'En eliminación directa usa el cuadro de Brackets' : ''" />
+    </div>
+  </div>
+
+  <div class="crud-alert" *ngIf="error()" role="alert">
+    <span>{{ error() }}</span>
+    <button type="button" aria-label="Reintentar" (click)="load()">↻</button>
+  </div>
+
+  <div class="cal-toolbar">
+    <p-selectButton [options]="viewOptions" [ngModel]="view()" (ngModelChange)="view.set($event)" optionLabel="label" optionValue="value">
+      <ng-template let-item pTemplate>
+        <i [class]="item.icon"></i><span class="ml-2">{{ item.label }}</span>
+      </ng-template>
+    </p-selectButton>
+    <span class="crud-muted" *ngIf="busy()"><i class="pi pi-spin pi-spinner"></i> Guardando...</span>
+  </div>
+
+  <p class="crud-muted" *ngIf="loading()">Cargando calendario...</p>
+
+  <div class="crud-card cal-empty" *ngIf="!loading() && rounds().length === 0">
+    <i class="pi pi-calendar-plus"></i>
+    <p>Este torneo todavía no tiene jornadas. Genera el calendario "todos contra todos" automáticamente.</p>
+    <p-button label="Generar jornadas" icon="pi pi-sync" (onClick)="openGenerate()" [disabled]="tournament()?.format === 'bracket'" />
+  </div>
+
+  <!-- ══ Vista por jornada ═════════════════════════════════════════════════ -->
+  <div class="cal-board" *ngIf="!loading() && view() === 'rounds' && rounds().length" cdkDropListGroup>
+    <section class="cal-column crud-card" *ngFor="let r of rounds()"
+      cdkDropList [cdkDropListData]="{ kind: 'round', roundId: r.id }" [cdkDropListEnterPredicate]="roundEnterPredicate"
+      cdkDropListSortingDisabled (cdkDropListDropped)="onDrop($event)">
+      <header class="cal-column__header">
+        <span class="crud-strong">{{ r.name }}</span>
+        <span class="crud-muted cal-column__sub">{{ roundDates(r.id) }} · {{ (byRound().get(r.id) ?? []).length }} partidos</span>
+      </header>
+      <div class="cal-column__body">
+        <div *ngFor="let m of byRound().get(r.id) ?? []; trackBy: trackById" cdkDrag [cdkDragData]="m" [cdkDragStartDelay]="dragDelay" [cdkDragDisabled]="!canDrag(m) || busy()"
+          class="cal-drag">
+          <ng-container *ngTemplateOutlet="card; context: { $implicit: m, compact: false }"></ng-container>
+          <div *cdkDragPlaceholder class="cal-placeholder"></div>
+        </div>
+        <p class="crud-muted cal-column__empty" *ngIf="(byRound().get(r.id) ?? []).length === 0">Suelta aquí un partido</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ══ Vista por día y cancha ════════════════════════════════════════════ -->
+  <div *ngIf="!loading() && view() === 'day'" class="cal-day" cdkDropListGroup>
+    <div class="cal-day__controls">
+      <p-button icon="pi pi-angle-double-left" [text]="true" [rounded]="true" pTooltip="Día anterior con partidos" (onClick)="jumpMatchDay(-1)" />
+      <p-button icon="pi pi-angle-left" [text]="true" [rounded]="true" pTooltip="Día anterior" (onClick)="shiftDay(-1)" />
+      <p-calendar [(ngModel)]="dayDate" (ngModelChange)="onDayPicked($event)" dateFormat="D dd/mm/yy" [showIcon]="true" [readonlyInput]="true" />
+      <p-button icon="pi pi-angle-right" [text]="true" [rounded]="true" pTooltip="Día siguiente" (onClick)="shiftDay(1)" />
+      <p-button icon="pi pi-angle-double-right" [text]="true" [rounded]="true" pTooltip="Siguiente día con partidos" (onClick)="jumpMatchDay(1)" />
+      <span class="crud-muted ml-2">Intervalo</span>
+      <p-dropdown [options]="stepOptions" optionLabel="label" optionValue="value" [ngModel]="step()" (ngModelChange)="step.set($event)" />
+      <span class="crud-muted ml-2">Canchas</span>
+      <p-multiSelect [options]="fields()" optionLabel="name" optionValue="id" [ngModel]="visibleFieldIds()"
+        (ngModelChange)="visibleFieldIds.set($event)" [maxSelectedLabels]="2" selectedItemsLabel="{0} canchas"
+        placeholder="Elige canchas" appendTo="body" styleClass="cal-fields-filter" />
+    </div>
+
+    <div class="cal-day__layout">
+      <!-- Bandeja: partidos sin programar o suspendidos -->
+      <section class="crud-card cal-tray" cdkDropList [cdkDropListData]="{ kind: 'tray' }" cdkDropListSortingDisabled
+        (cdkDropListDropped)="onDrop($event)">
+        <header class="cal-column__header">
+          <span class="crud-strong">Sin programar</span>
+          <span class="crud-muted cal-column__sub">{{ tray().length }} · arrástralos a una cancha</span>
+        </header>
+        <div class="cal-column__body">
+          <div *ngFor="let m of tray(); trackBy: trackById" cdkDrag [cdkDragData]="m" [cdkDragStartDelay]="dragDelay" [cdkDragDisabled]="!canDrag(m) || busy()" class="cal-drag">
+            <ng-container *ngTemplateOutlet="card; context: { $implicit: m, compact: true }"></ng-container>
+            <div *cdkDragPlaceholder class="cal-placeholder"></div>
+          </div>
+          <p class="crud-muted cal-column__empty" *ngIf="tray().length === 0">Todo está programado</p>
+        </div>
+      </section>
+
+      <!-- Rejilla: horas × canchas -->
+      <div class="crud-card cal-grid-wrap">
+        <div class="cal-grid" [style.grid-template-columns]="'64px repeat(' + columns().length + ', minmax(170px, 1fr))'">
+          <div class="cal-grid__corner">{{ formatDay(day()) }}</div>
+          <div class="cal-grid__head" *ngFor="let c of columns()">{{ c.name }}</div>
+          <ng-container *ngFor="let t of timeSlots()">
+            <div class="cal-grid__time">{{ t }}</div>
+            <div *ngFor="let c of columns()" class="cal-grid__cell" cdkDropList [cdkDropListData]="{ kind: 'cell', fieldId: c.id, time: t }"
+              cdkDropListSortingDisabled (cdkDropListDropped)="onDrop($event)" [class.cal-grid__cell--clash]="cell(c.id, t).length > 1">
+              <div *ngFor="let m of cell(c.id, t); trackBy: trackById" cdkDrag [cdkDragData]="m" [cdkDragStartDelay]="dragDelay" [cdkDragDisabled]="!canDrag(m) || busy()" class="cal-drag">
+                <ng-container *ngTemplateOutlet="card; context: { $implicit: m, compact: true }"></ng-container>
+                <div *cdkDragPlaceholder class="cal-placeholder"></div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+    <p class="crud-hint">Solo se muestran los partidos de este torneo. Si la cancha está ocupada por otro torneo de la liga, el sistema te avisará al soltar.</p>
+  </div>
+</div>
+
+<!-- ══ Diálogo: cambiar fecha, cancha o jornada ═════════════════════════════ -->
+<p-dialog [(visible)]="editVisible" header="Reprogramar partido" [modal]="true" [style]="{ width: '440px' }" [breakpoints]="{ '575px': '95vw' }">
+  <div class="form-grid" *ngIf="editMatch as m">
+    <p class="form-grid__full crud-strong">{{ matchLabel(m) }}</p>
+    <div class="form-grid__full">
+      <label for="e-date">Fecha y hora</label>
+      <p-calendar inputId="e-date" [(ngModel)]="editDate" [showTime]="true" hourFormat="24" [stepMinute]="15" dateFormat="dd/mm/yy"
+        [showIcon]="true" [showButtonBar]="true" appendTo="body" />
+    </div>
+    <div class="form-grid__full">
+      <label for="e-field">Cancha</label>
+      <p-dropdown inputId="e-field" [options]="fields()" optionLabel="name" optionValue="id" [(ngModel)]="editFieldId"
+        placeholder="Sin cancha" [showClear]="true" appendTo="body" />
+    </div>
+    <div class="form-grid__full">
+      <label for="e-round">Jornada</label>
+      <p-dropdown inputId="e-round" [options]="editRoundOptions()" optionLabel="name" optionValue="id" [(ngModel)]="editRoundId" appendTo="body" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="editVisible = false" />
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="saveEdit()" />
+  </ng-template>
+</p-dialog>
+
+<!-- ══ Diálogo: generar jornadas ═════════════════════════════════════════════ -->
+<p-dialog [(visible)]="genVisible" header="Generar jornadas (todos contra todos)" [modal]="true" [style]="{ width: '720px' }"
+  [breakpoints]="{ '768px': '95vw' }">
+  <div class="form-grid">
+    <div class="form-grid__full">
+      <p-checkbox [(ngModel)]="genDoubleRound" [binary]="true" inputId="g-double" label="Ida y vuelta (cada cruce se juega dos veces, invirtiendo la localía)" />
+    </div>
+    <div>
+      <label for="g-start">Fecha de la jornada 1 (opcional)</label>
+      <p-calendar inputId="g-start" [(ngModel)]="genStart" dateFormat="dd/mm/yy" [showIcon]="true" [showButtonBar]="true" appendTo="body" />
+    </div>
+    <div>
+      <label for="g-days">Días entre jornadas</label>
+      <p-inputNumber inputId="g-days" [(ngModel)]="genDays" [min]="1" [max]="60" [showButtons]="true" />
+    </div>
+    <div class="form-grid__full" *ngIf="genStart">
+      <label for="g-times">Horarios de inicio (escribe HH:MM y presiona Enter)</label>
+      <p-chips inputId="g-times" [(ngModel)]="genTimes" [allowDuplicate]="false" separator="," placeholder="09:00" />
+      <small class="field-error" *ngIf="invalidTimes().length">Horarios inválidos: {{ invalidTimes().join(', ') }} (usa 24 h, p. ej. 18:30)</small>
+    </div>
+    <div class="form-grid__full" *ngIf="genStart">
+      <label for="g-fields">Canchas</label>
+      <p-multiSelect inputId="g-fields" [options]="fields()" optionLabel="name" optionValue="id" [(ngModel)]="genFieldIds"
+        display="chip" placeholder="Sin cancha asignada" appendTo="body" />
+    </div>
+    <p class="crud-hint form-grid__full">
+      Cada jornada se reparte en los horarios y canchas libres de su día, sin chocar con otros torneos de la liga.
+      Sin fecha, los partidos quedan sin programar y puedes acomodarlos arrastrando.
+      <ng-container *ngIf="groupRounds().length"> <strong>Ya hay {{ groupRounds().length }} jornadas sin jugar: se reemplazarán.</strong></ng-container>
+    </p>
+  </div>
+
+  <div class="form-alert" *ngIf="genError()" role="alert">{{ genError() }}</div>
+
+  <div class="gen-preview" *ngIf="genPreview() as p">
+    <p class="crud-strong">
+      Vista previa: {{ p.rounds }} jornadas · {{ p.matches }} partidos
+      <ng-container *ngIf="p.unscheduled"> · <span class="match-live" style="color: #b45309">{{ p.unscheduled }} sin horario</span></ng-container>
+    </p>
+    <ul class="gen-preview__warnings" *ngIf="p.warnings.length">
+      <li *ngFor="let w of p.warnings">{{ w }}</li>
+    </ul>
+    <div class="gen-preview__rounds">
+      <div class="gen-preview__round" *ngFor="let r of p.preview">
+        <div class="crud-strong">{{ r.name }} <span class="crud-muted">{{ r.date ? formatDay(r.date) : '' }}</span></div>
+        <div class="gen-preview__match" *ngFor="let m of r.matches">
+          <span>{{ m.home_team }} vs {{ m.away_team }}</span>
+          <span class="crud-muted">
+            {{ m.group_name ? m.group_name + ' · ' : '' }}{{ m.scheduled_at ? (m.scheduled_at | slice: 11 : 16) : 'sin hora' }}{{ m.field_name ? ' · ' + m.field_name : '' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="genVisible = false" />
+    <p-button label="Vista previa" icon="pi pi-eye" [outlined]="true" [loading]="busy()" [disabled]="invalidTimes().length > 0"
+      (onClick)="previewSchedule()" />
+    <p-button label="Generar calendario" icon="pi pi-check" [loading]="busy()" [disabled]="!genPreview() || invalidTimes().length > 0"
+      (onClick)="generate()" />
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,114 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="crud-page">
+  <a class="crud-back" routerLink="/admin/equipos"><i class="pi pi-arrow-left"></i> Volver a equipos</a>
+
+  <div class="crud-page__header">
+    <div>
+      <h2 class="crud-page__title">
+        <span class="crud-swatch" *ngIf="team()" [style.background]="team()!.primary_color || '#d1d5db'"></span>{{ team()?.name || 'Jugadores' }}
+      </h2>
+      <p class="crud-page__subtitle" *ngIf="team()">
+        {{ team()!.category_name || 'Sin categoría' }} · {{ items().length }} {{ items().length === 1 ? 'jugador' : 'jugadores' }}
+        <ng-container *ngIf="team()!.captain_name"> · Capitán: {{ team()!.captain_name }}</ng-container>
+      </p>
+    </div>
+    <p-button *ngIf="team()" label="Nuevo jugador" icon="pi pi-plus" (onClick)="openCreate()" />
+  </div>
+
+  <div class="crud-alert" *ngIf="error()" role="alert">
+    <span>{{ error() }}</span>
+    <button type="button" aria-label="Cerrar" (click)="error.set('')">×</button>
+  </div>
+
+  <div class="crud-card" *ngIf="team() || loading()">
+    <p-table #dt [value]="items()" [loading]="loading()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]"
+      [globalFilterFields]="['name', 'jersey_number', 'position']" [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first}–{last} de {totalRecords}" responsiveLayout="scroll" dataKey="id">
+      <ng-template pTemplate="caption">
+        <div class="crud-toolbar">
+          <span class="p-input-icon-left crud-search">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" placeholder="Buscar por nombre, número o posición..."
+              (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="jersey_number" style="width: 90px"># <p-sortIcon field="jersey_number" /></th>
+          <th pSortableColumn="name">Jugador <p-sortIcon field="name" /></th>
+          <th pSortableColumn="position">Posición <p-sortIcon field="position" /></th>
+          <th pSortableColumn="status">Estatus <p-sortIcon field="status" /></th>
+          <th class="crud-end">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-p>
+        <tr>
+          <td class="crud-muted">{{ p.jersey_number || '—' }}</td>
+          <td class="crud-strong">
+            {{ p.name }}
+            <p-tag *ngIf="isCaptain(p)" value="Capitán" severity="info" [style]="{ 'margin-left.px': 8 }" />
+          </td>
+          <td class="crud-muted">{{ p.position || '—' }}</td>
+          <td><p-tag [value]="statusLabel(p.status)" [severity]="statusSeverity(p.status)" /></td>
+          <td>
+            <div class="crud-actions">
+              <p-button [icon]="isCaptain(p) ? 'pi pi-star-fill' : 'pi pi-star'" [rounded]="true" [text]="true"
+                [pTooltip]="isCaptain(p) ? 'Quitar capitanía' : 'Nombrar capitán'" tooltipPosition="top"
+                [ariaLabel]="isCaptain(p) ? 'Quitar capitanía' : 'Nombrar capitán'" (onClick)="toggleCaptain(p)" />
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" pTooltip="Editar" tooltipPosition="top" ariaLabel="Editar" (onClick)="openEdit(p)" />
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" tooltipPosition="top" ariaLabel="Eliminar" (onClick)="remove(p)" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="crud-table__empty">
+            {{ loading() ? 'Cargando...' : items().length === 0 ? 'Este equipo aún no tiene jugadores' : 'No se encontraron jugadores' }}
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog [(visible)]="dialogVisible" [modal]="true" [draggable]="false" [style]="{ width: '480px', maxWidth: '95vw' }"
+  [header]="editing() ? 'Editar jugador' : 'Nuevo jugador'">
+  <form [formGroup]="form" (ngSubmit)="save()" class="form-grid" novalidate>
+    <div class="form-grid__full">
+      <label for="p-name">Nombre completo</label>
+      <input pInputText id="p-name" formControlName="name" placeholder="Ej. Juan Pérez" maxlength="160" />
+      <small class="field-error" *ngIf="fieldInvalid('name') && form.controls.name.errors?.['maxlength']">Máximo 150 caracteres.</small>
+      <small class="field-error" *ngIf="fieldInvalid('name') && !form.controls.name.errors?.['maxlength']">El nombre es obligatorio.</small>
+    </div>
+    <div>
+      <label for="p-number">Número</label>
+      <input pInputText id="p-number" formControlName="jersey_number" placeholder="10" maxlength="6" />
+      <small class="field-error" *ngIf="fieldInvalid('jersey_number')">Máximo 5 caracteres.</small>
+    </div>
+    <div>
+      <label for="p-pos">Posición</label>
+      <p-dropdown inputId="p-pos" [options]="positions" [editable]="true" [showClear]="true" formControlName="position"
+        placeholder="Selecciona o escribe" appendTo="body" />
+      <small class="field-error" *ngIf="fieldInvalid('position')">Máximo 50 caracteres.</small>
+    </div>
+    <div class="form-grid__full" *ngIf="editing()">
+      <label for="p-status">Estatus</label>
+      <p-dropdown inputId="p-status" [options]="statuses" optionLabel="label" optionValue="value" formControlName="status" appendTo="body" />
+      <p class="crud-hint">Un jugador con goles o tarjetas registrados no se puede eliminar: márcalo como inactivo.</p>
+    </div>
+    <p class="crud-hint form-grid__full">El número de camiseta no se puede repetir dentro del equipo.</p>
+  </form>
+  <div class="form-alert" *ngIf="formError()" role="alert">{{ formError() }}</div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="dialogVisible = false" />
+    <p-button [label]="editing() ? 'Guardar cambios' : 'Agregar jugador'" icon="pi pi-check" [loading]="saving()" (onClick)="save()" />
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,180 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="crud-page">
+  <a class="crud-back" [routerLink]="backLink()"><i class="pi pi-arrow-left"></i> {{ isAdmin ? 'Volver a los partidos' : 'Volver a mis partidos' }}</a>
+
+  <div class="crud-alert" *ngIf="error()" role="alert">
+    <span>{{ error() }}</span>
+    <button type="button" aria-label="Reintentar" (click)="load()">↻</button>
+  </div>
+
+  <p class="crud-muted" *ngIf="loading()">Cargando partido...</p>
+
+  <ng-container *ngIf="match() as m">
+    <!-- ══ Marcador ═════════════════════════════════════════════════════════ -->
+    <section class="crud-card scoreboard">
+      <div class="scoreboard__meta">
+        <span>{{ m.tournament_name }} · {{ m.round_name }}<ng-container *ngIf="m.group_name"> · {{ m.group_name }}</ng-container></span>
+        <p-tag [value]="statusLabel()" [severity]="statusSeverity()" />
+      </div>
+
+      <div class="scoreboard__main">
+        <div class="scoreboard__team">
+          <span class="scoreboard__badge" [style.background]="m.home_color || '#d1d5db'">{{ (m.home_short || m.home_team || '?') | slice: 0 : 3 }}</span>
+          <span class="scoreboard__name">{{ m.home_team || 'Por definir' }}</span>
+        </div>
+        <div class="scoreboard__score" aria-live="polite">
+          <span>{{ m.score_home }}</span><span class="scoreboard__dash">–</span><span>{{ m.score_away }}</span>
+          <div class="scoreboard__pens" *ngIf="m.penalties_home !== null">Penales {{ m.penalties_home }} – {{ m.penalties_away }}</div>
+          <div class="scoreboard__clock" *ngIf="elapsed() as min"><span class="match-live-dot"></span> {{ min }}'</div>
+        </div>
+        <div class="scoreboard__team scoreboard__team--away">
+          <span class="scoreboard__badge" [style.background]="m.away_color || '#d1d5db'">{{ (m.away_short || m.away_team || '?') | slice: 0 : 3 }}</span>
+          <span class="scoreboard__name">{{ m.away_team || 'Por definir' }}</span>
+        </div>
+      </div>
+
+      <div class="scoreboard__info crud-muted">
+        <span><i class="pi pi-calendar"></i> {{ m.scheduled_at ? (m.scheduled_at | date: 'EEEE dd MMM, HH:mm') : 'Sin fecha' }}</span>
+        <span *ngIf="m.field_name"><i class="pi pi-map-marker"></i>
+          <a *ngIf="m.maps_url; else plainField" class="crud-link" [href]="m.maps_url" target="_blank" rel="noopener">{{ m.field_name }}</a>
+          <ng-template #plainField>{{ m.field_name }}</ng-template>
+        </span>
+        <span *ngIf="detail()!.referees.length"><i class="pi pi-flag"></i>
+          <ng-container *ngFor="let r of detail()!.referees; let last = last">{{ r.name }} ({{ r.role }}){{ last ? '' : ', ' }}</ng-container>
+        </span>
+      </div>
+
+      <div class="scoreboard__actions">
+        <ng-container *ngIf="canCapture()">
+          <span class="minute-field">
+            <label for="minute">Minuto</label>
+            <p-inputNumber inputId="minute" [(ngModel)]="minute" [min]="0" [max]="200" [placeholder]="elapsed() ? '' + elapsed() : '—'"
+              [inputStyle]="{ width: '72px' }" />
+          </span>
+          <p-button label="Finalizar partido" icon="pi pi-check-circle" severity="success" [disabled]="busy() || !m.home_team_id || !m.away_team_id"
+            (onClick)="openFinish()" />
+        </ng-container>
+        <p-button *ngIf="isAdmin && m.status === 'finished'" label="Reabrir para corregir" icon="pi pi-undo" [outlined]="true"
+          [disabled]="busy()" (onClick)="reopen()" />
+        <span class="crud-muted" *ngIf="!detail()!.can_capture && live()">Solo los árbitros asignados o un administrador pueden capturar.</span>
+      </div>
+    </section>
+
+    <!-- ══ Descansos activos por amarilla ═══════════════════════════════════ -->
+    <div class="sin-bins" *ngIf="sinBins().length">
+      <span class="sin-bin" *ngFor="let s of sinBins()">
+        🟨 {{ s.player_name }} ({{ s.team_name }}) — descanso {{ formatRemaining(s.remaining) }}
+      </span>
+    </div>
+
+    <!-- ══ Plantillas ═══════════════════════════════════════════════════════ -->
+    <div class="rosters">
+      <section class="crud-card roster" *ngFor="let side of ['home', 'away']">
+        <header class="roster__header">
+          <span class="crud-strong">
+            <span class="crud-swatch" [style.background]="(side === 'home' ? m.home_color : m.away_color) || '#d1d5db'"></span>
+            {{ (side === 'home' ? m.home_team : m.away_team) || 'Por definir' }}
+          </span>
+          <p-button *ngIf="canCapture()" label="Gol" icon="pi pi-plus" size="small" [text]="true" [disabled]="busy()"
+            (onClick)="openGoal($any(side))" />
+        </header>
+
+        <p class="crud-muted roster__empty" *ngIf="players($any(side)).length === 0">Este equipo no tiene jugadores registrados.</p>
+
+        <ul class="roster__list">
+          <li class="roster__player" *ngFor="let p of players($any(side))" [class.roster__player--out]="isExpelled(p)">
+            <span class="roster__number">{{ p.jersey_number || '—' }}</span>
+            <span class="roster__name">
+              {{ p.name }}
+              <small class="crud-muted" *ngIf="p.position">{{ p.position }}</small>
+              <p-tag *ngIf="p.suspended" value="Suspendido" severity="danger" pTooltip="Tiene una sanción pendiente de un partido anterior" />
+              <p-tag *ngIf="p.status !== 'active'" [value]="p.status === 'inactive' ? 'Inactivo' : 'Suspendido'" severity="warning" />
+              <small class="roster__acc" *ngIf="p.yellow_cards" pTooltip="Amarillas acumuladas en el torneo">🟨×{{ p.yellow_cards }}</small>
+            </span>
+            <span class="roster__marks">
+              <span *ngFor="let _ of times(cardsInMatch(p, 'goal'))">⚽</span>
+              <span *ngFor="let _ of times(cardsInMatch(p, 'yellow_card'))">🟨</span>
+              <span *ngIf="cardsInMatch(p, 'red_card')">🟥</span>
+            </span>
+            <span class="roster__actions" *ngIf="canCapture()">
+              <button type="button" class="ev-btn" [disabled]="busy()" (click)="openGoal($any(side), p)" title="Gol" aria-label="Gol">⚽</button>
+              <button type="button" class="ev-btn ev-btn--og" [disabled]="busy()" (click)="register($any(side), 'own_goal', p.id)" title="Autogol" aria-label="Autogol">AG</button>
+              <button type="button" class="ev-btn" [disabled]="busy() || isExpelled(p)" (click)="card($any(side), p, 'yellow_card')" title="Amarilla" aria-label="Tarjeta amarilla"><span class="card card--yellow"></span></button>
+              <button type="button" class="ev-btn" [disabled]="busy() || isExpelled(p)" (click)="card($any(side), p, 'red_card')" title="Roja" aria-label="Tarjeta roja"><span class="card card--red"></span></button>
+            </span>
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- ══ Cronología ═══════════════════════════════════════════════════════ -->
+    <section class="crud-card timeline">
+      <header class="roster__header"><span class="crud-strong">Incidencias</span><span class="crud-muted">{{ timeline().length }}</span></header>
+      <p class="crud-muted roster__empty" *ngIf="timeline().length === 0">Aún no hay incidencias registradas.</p>
+      <ul class="timeline__list">
+        <li *ngFor="let e of timeline()" class="timeline__item" [class.timeline__item--away]="e.team_id === m.away_team_id">
+          <span class="timeline__minute">{{ e.minute !== null ? e.minute + "'" : '—' }}</span>
+          <span class="timeline__icon">{{ eventMeta[e.event_type].icon }}</span>
+          <span class="timeline__text">
+            <strong>{{ eventMeta[e.event_type].label }}</strong>
+            <ng-container *ngIf="e.player_name"> · {{ e.jersey_number ? '#' + e.jersey_number + ' ' : '' }}{{ e.player_name }}</ng-container>
+            <span class="crud-muted" *ngIf="e.assist_player_name"> (asist. {{ e.assist_player_name }})</span>
+            <span class="crud-muted"> — {{ e.team_name }}</span>
+          </span>
+          <p-button *ngIf="canCapture()" icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small"
+            ariaLabel="Eliminar incidencia" [disabled]="busy()" (onClick)="removeEvent(e)" />
+        </li>
+      </ul>
+    </section>
+  </ng-container>
+</div>
+
+<!-- ══ Diálogo: gol ══════════════════════════════════════════════════════════ -->
+<p-dialog [(visible)]="goalVisible" header="Registrar gol" [modal]="true" [style]="{ width: '420px' }" [breakpoints]="{ '575px': '95vw' }">
+  <div class="form-grid" *ngIf="match()">
+    <div class="form-grid__full">
+      <label for="g-scorer">Goleador</label>
+      <p-dropdown inputId="g-scorer" [options]="scorerOptions()" optionLabel="label" optionValue="id"
+        [ngModel]="goalScorerId()" (ngModelChange)="setScorer($event)"
+        placeholder="Sin jugador identificado" [showClear]="true" appendTo="body" styleClass="w-full" />
+    </div>
+    <div class="form-grid__full">
+      <label for="g-assist">Asistencia (opcional)</label>
+      <p-dropdown inputId="g-assist" [options]="assistOptions()" optionLabel="label" optionValue="id" [(ngModel)]="goalAssistId"
+        placeholder="Sin asistencia" [showClear]="true" appendTo="body" styleClass="w-full" />
+    </div>
+    <p class="crud-hint form-grid__full">Minuto: {{ minute ?? elapsed() ?? 'sin minuto' }}. Puedes cambiarlo en el campo "Minuto" del marcador.</p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="goalVisible = false" />
+    <p-button label="Registrar gol" icon="pi pi-check" (onClick)="saveGoal()" />
+  </ng-template>
+</p-dialog>
+
+<!-- ══ Diálogo: finalizar ════════════════════════════════════════════════════ -->
+<p-dialog [(visible)]="finishVisible" header="Finalizar partido" [modal]="true" [style]="{ width: '440px' }" [breakpoints]="{ '575px': '95vw' }">
+  <ng-container *ngIf="match() as m">
+    <p>Resultado final: <strong>{{ m.home_team }} {{ m.score_home }} – {{ m.score_away }} {{ m.away_team }}</strong></p>
+    <ng-container *ngIf="needsPenalties()">
+      <p class="crud-hint">Es eliminatoria y está empatado: registra los penales para definir al ganador.</p>
+      <div class="form-grid">
+        <div>
+          <label for="p-home">Penales {{ m.home_short || m.home_team }}</label>
+          <p-inputNumber inputId="p-home" [(ngModel)]="penHome" [min]="0" [max]="99" [showButtons]="true" />
+        </div>
+        <div>
+          <label for="p-away">Penales {{ m.away_short || m.away_team }}</label>
+          <p-inputNumber inputId="p-away" [(ngModel)]="penAway" [min]="0" [max]="99" [showButtons]="true" />
+        </div>
+      </div>
+      <small class="field-error" *ngIf="penHome !== null && penHome === penAway">Los penales no pueden quedar empatados.</small>
+    </ng-container>
+    <p class="crud-hint">Al finalizar se actualizan la tabla, las estadísticas, las sanciones y, si aplica, la llave.</p>
+  </ng-container>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="finishVisible = false" />
+    <p-button label="Finalizar" icon="pi pi-check" severity="success" [disabled]="penaltiesInvalid()" (onClick)="finish()" />
+  </ng-template>
+</p-dialog>

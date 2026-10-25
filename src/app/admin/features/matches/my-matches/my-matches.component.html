@@ -1,0 +1,36 @@
+<div class="crud-page">
+  <div class="crud-page__header">
+    <div>
+      <h2 class="crud-page__title">Mis partidos</h2>
+      <p class="crud-page__subtitle">Partidos en los que estás asignado como árbitro.</p>
+    </div>
+    <p-button label="Actualizar" icon="pi pi-refresh" [outlined]="true" (onClick)="load()" />
+  </div>
+
+  <div class="crud-alert" *ngIf="error()" role="alert">
+    <span>{{ error() }}</span>
+    <button type="button" aria-label="Reintentar" (click)="load()">↻</button>
+  </div>
+
+  <p class="crud-muted" *ngIf="loading()">Cargando...</p>
+  <p class="crud-muted" *ngIf="!loading() && !error() && items().length === 0">No tienes partidos asignados por ahora.</p>
+
+  <div class="my-matches">
+    <a class="my-match crud-card" *ngFor="let m of items()" [routerLink]="['/admin/torneos', m.tournament_id, 'partidos', m.id]">
+      <div class="my-match__top">
+        <span class="crud-muted">{{ m.tournament_name }} · {{ m.round_name }}</span>
+        <p-tag [value]="statusLabel(m.status)" [severity]="statusSeverity(m.status)" />
+      </div>
+      <div class="my-match__teams">
+        <span><span class="crud-swatch" [style.background]="m.home_color || '#d1d5db'"></span>{{ m.home_team || 'Por definir' }}</span>
+        <strong class="match-score">{{ m.status === 'scheduled' ? 'vs' : m.score_home + ' – ' + m.score_away }}</strong>
+        <span><span class="crud-swatch" [style.background]="m.away_color || '#d1d5db'"></span>{{ m.away_team || 'Por definir' }}</span>
+      </div>
+      <div class="crud-muted my-match__meta">
+        <i class="pi pi-calendar"></i> {{ m.scheduled_at ? (m.scheduled_at | date: 'EEE dd MMM, HH:mm') : 'Sin fecha' }}
+        <ng-container *ngIf="m.field_name"> · <i class="pi pi-map-marker"></i> {{ m.field_name }}</ng-container>
+        · Árbitro {{ m.referee_role }}
+      </div>
+    </a>
+  </div>
+</div>

@@ -11,9 +11,4 @@ import { CommonModule } from '@angular/common';
   templateUrl: './admin-layout.component.html',
   styleUrls: ['./admin-layout.component.scss']
 })
-export class AdminLayoutComponent {
-
-  pageTitle = 'Soccer - Dashboard Overview';
-  pageBreadcrumb = 'Welcome to the main admin control center for Soccer.';
-
-}
+export class AdminLayoutComponent {}

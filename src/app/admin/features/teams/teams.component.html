@@ -1,0 +1,127 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="crud-page">
+  <div class="crud-page__header">
+    <div>
+      <h2 class="crud-page__title">Equipos</h2>
+      <p class="crud-page__subtitle">Registra los equipos de tu liga, sus entrenadores y sus jugadores.</p>
+    </div>
+    <p-button label="Nuevo equipo" icon="pi pi-plus" (onClick)="openCreate()" />
+  </div>
+
+  <div class="crud-alert" *ngIf="error()" role="alert">
+    <span>{{ error() }}</span>
+    <button type="button" aria-label="Reintentar" (click)="load()">↻</button>
+  </div>
+
+  <div class="crud-card">
+    <p-table #dt [value]="items()" [loading]="loading()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]"
+      [globalFilterFields]="['name', 'short_name', 'category_name']" [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first}–{last} de {totalRecords}" responsiveLayout="scroll" dataKey="id">
+      <ng-template pTemplate="caption">
+        <div class="crud-toolbar">
+          <span class="p-input-icon-left crud-search">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" placeholder="Buscar por nombre o categoría..."
+              (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="name">Equipo <p-sortIcon field="name" /></th>
+          <th pSortableColumn="category_name">Categoría <p-sortIcon field="category_name" /></th>
+          <th>Entrenadores</th>
+          <th pSortableColumn="players_count">Jugadores <p-sortIcon field="players_count" /></th>
+          <th>Capitán</th>
+          <th class="crud-end">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-t>
+        <tr>
+          <td class="crud-strong">
+            <span class="crud-swatch" [style.background]="t.primary_color || '#d1d5db'"></span>{{ t.name }}
+            <span class="crud-muted" *ngIf="t.short_name">({{ t.short_name }})</span>
+          </td>
+          <td>{{ t.category_name || '—' }}</td>
+          <td class="crud-muted">{{ coachNames(t) }}</td>
+          <td>
+            <a class="crud-link" [routerLink]="['/admin/equipos', t.id, 'jugadores']">
+              {{ t.players_count }} {{ t.players_count === 1 ? 'jugador' : 'jugadores' }}
+            </a>
+          </td>
+          <td class="crud-muted">{{ t.captain_name || '—' }}</td>
+          <td>
+            <div class="crud-actions">
+              <a pButton icon="pi pi-users" class="p-button-rounded p-button-text" pTooltip="Ver jugadores" tooltipPosition="top"
+                aria-label="Ver jugadores" [routerLink]="['/admin/equipos', t.id, 'jugadores']"></a>
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" pTooltip="Editar" tooltipPosition="top" ariaLabel="Editar" (onClick)="openEdit(t)" />
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" tooltipPosition="top" ariaLabel="Eliminar" (onClick)="remove(t)" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="6" class="crud-table__empty">{{ loading() ? 'Cargando...' : 'No se encontraron equipos' }}</td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog [(visible)]="dialogVisible" [modal]="true" [draggable]="false" [style]="{ width: '640px', maxWidth: '95vw' }"
+  [header]="editing() ? 'Editar equipo' : 'Nuevo equipo'">
+  <div class="crud-alert" *ngIf="categories().length === 0" role="alert">
+    <span>Aún no hay categorías. Crea una en Catálogos &gt; Categorías para poder registrar equipos.</span>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="save()" class="form-grid" novalidate>
+    <div>
+      <label for="t-name">Nombre del equipo</label>
+      <input pInputText id="t-name" formControlName="name" placeholder="Ej. Águilas FC" maxlength="110" />
+      <small class="field-error" *ngIf="fieldInvalid('name') && form.controls.name.errors?.['maxlength']">Máximo 100 caracteres.</small>
+      <small class="field-error" *ngIf="fieldInvalid('name') && !form.controls.name.errors?.['maxlength']">El nombre es obligatorio.</small>
+    </div>
+    <div>
+      <label for="t-short">Nombre corto</label>
+      <input pInputText id="t-short" formControlName="short_name" placeholder="AGU" maxlength="12" />
+      <small class="field-error" *ngIf="fieldInvalid('short_name')">Máximo 10 caracteres.</small>
+    </div>
+    <div>
+      <label for="t-cat">Categoría</label>
+      <p-dropdown inputId="t-cat" [options]="categories()" optionLabel="name" optionValue="id" formControlName="category_id"
+        placeholder="Selecciona una categoría" appendTo="body" />
+      <small class="field-error" *ngIf="fieldInvalid('category_id')">Selecciona una categoría.</small>
+    </div>
+    <div>
+      <label for="t-color">Color del uniforme</label>
+      <input type="color" id="t-color" class="crud-color-input" formControlName="primary_color" />
+    </div>
+    <div>
+      <label for="t-email">Correo de contacto (opcional)</label>
+      <input pInputText id="t-email" type="email" formControlName="contact_email" placeholder="equipo@correo.com" />
+      <small class="field-error" *ngIf="fieldInvalid('contact_email')">Escribe un correo válido (máximo 150 caracteres).</small>
+    </div>
+    <div>
+      <label for="t-phone">Teléfono (opcional)</label>
+      <input pInputText id="t-phone" type="tel" formControlName="contact_phone" placeholder="667 123 4567" maxlength="35" />
+      <small class="field-error" *ngIf="fieldInvalid('contact_phone')">Máximo 30 caracteres.</small>
+    </div>
+    <div class="form-grid__full">
+      <label for="t-coaches">Entrenadores (opcional)</label>
+      <p-multiSelect inputId="t-coaches" [options]="coachChoices()" optionLabel="label" optionValue="id" formControlName="coach_ids"
+        placeholder="Selecciona uno o varios" display="chip" appendTo="body" emptyMessage="No hay entrenadores. Créalos en Catálogos > Usuarios." />
+    </div>
+  </form>
+  <p class="crud-hint">Los jugadores se agregan después, desde la lista del equipo.</p>
+  <div class="form-alert" *ngIf="formError()" role="alert">{{ formError() }}</div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="dialogVisible = false" />
+    <p-button [label]="editing() ? 'Guardar cambios' : 'Crear equipo'" icon="pi pi-check" [loading]="saving()"
+      [disabled]="categories().length === 0" (onClick)="save()" />
+  </ng-template>
+</p-dialog>

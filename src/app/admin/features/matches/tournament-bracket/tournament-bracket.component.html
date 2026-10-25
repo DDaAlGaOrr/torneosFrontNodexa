@@ -1,0 +1,136 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="crud-page">
+  <a class="crud-back" [routerLink]="['/admin/torneos', tournamentId, 'partidos']"><i class="pi pi-arrow-left"></i> Volver a los partidos</a>
+
+  <div class="crud-page__header">
+    <div>
+      <h2 class="crud-page__title">{{ tournament()?.name || 'Eliminatoria' }}</h2>
+      <p class="crud-page__subtitle" *ngIf="hasBracket(); else noBracketSub">
+        {{ progress().finished }} de {{ progress().total }} partidos finalizados
+        <ng-container *ngIf="progress().live"> · <span class="match-live">{{ progress().live }} en juego</span></ng-container>
+        <ng-container *ngIf="lastUpdate()"> · se actualiza solo (última: {{ lastUpdate() | date: 'HH:mm:ss' }})</ng-container>
+      </p>
+      <ng-template #noBracketSub><p class="crud-page__subtitle">Todavía no hay cuadro de eliminatoria.</p></ng-template>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a pButton label="Calendario" icon="pi pi-calendar" class="p-button-outlined" [routerLink]="['/admin/torneos', tournamentId, 'calendario']"></a>
+      <p-button icon="pi pi-refresh" [outlined]="true" pTooltip="Actualizar" ariaLabel="Actualizar" (onClick)="load(true)" />
+      <p-button [label]="hasBracket() ? 'Regenerar cuadro' : 'Generar cuadro'" icon="pi pi-sitemap" (onClick)="openGenerate()" />
+    </div>
+  </div>
+
+  <div class="crud-alert" *ngIf="error()" role="alert">
+    <span>{{ error() }}</span>
+    <button type="button" aria-label="Reintentar" (click)="load()">↻</button>
+  </div>
+
+  <p class="crud-muted" *ngIf="loading()">Cargando eliminatoria...</p>
+
+  <div class="crud-card cal-empty" *ngIf="!loading() && !hasBracket()">
+    <i class="pi pi-sitemap"></i>
+    <p>
+      Genera el cuadro automáticamente: con los mejores de cada grupo (cruce 1A-2B, 1B-2A…) o con una siembra directa
+      de los equipos inscritos. Si no son potencia de 2, los mejores sembrados pasan directo a la siguiente ronda.
+    </p>
+    <p-button label="Generar cuadro" icon="pi pi-sitemap" (onClick)="openGenerate()" />
+  </div>
+
+  <div class="crud-card bracket-card" *ngIf="!loading() && hasBracket()">
+    <app-bracket-tree [rounds]="rounds()" [clickable]="true" (matchClick)="openMatch($event)" />
+    <p class="crud-hint bracket-hint">
+      Pulsa un partido para capturar su resultado. Al finalizarlo, el ganador avanza solo a la siguiente ronda.
+    </p>
+  </div>
+</div>
+
+<!-- ══ Diálogo: generar cuadro ═════════════════════════════════════════════ -->
+<p-dialog [(visible)]="genVisible" header="Generar cuadro de eliminatoria" [modal]="true" [style]="{ width: '640px' }"
+  [breakpoints]="{ '768px': '95vw' }">
+  <div class="form-grid">
+    <div class="form-grid__full">
+      <p-selectButton [options]="sourceOptions" [(ngModel)]="genSource" (ngModelChange)="genPreview.set(null)" optionLabel="label" optionValue="value" />
+    </div>
+
+    <!-- Desde grupos -->
+    <ng-container *ngIf="genSource === 'groups'">
+      <p class="crud-muted form-grid__full m-0" *ngIf="groups().length === 0">
+        Este torneo no tiene grupos. Usa la siembra directa o crea los grupos primero.
+      </p>
+      <ng-container *ngIf="groups().length">
+        <div>
+          <label for="b-q">Clasifican por grupo</label>
+          <p-inputNumber inputId="b-q" [(ngModel)]="genQualifiers" (ngModelChange)="genPreview.set(null)" [min]="1" [max]="8" [showButtons]="true" />
+        </div>
+        <div class="crud-muted bracket-groups">
+          <span *ngFor="let g of groups()">{{ g.name }}: {{ g.teams.length }} equipos</span>
+        </div>
+        <p class="crud-hint form-grid__full">
+          Se toma el orden de la tabla de cada grupo. Con 2 por grupo y 2, 4 u 8 grupos se usa el cruce clásico (1A-2B, 1B-2A…).
+        </p>
+      </ng-container>
+    </ng-container>
+
+    <!-- Siembra directa -->
+    <ng-container *ngIf="genSource === 'teams'">
+      <div class="form-grid__full flex flex-wrap align-items-center gap-2">
+        <span class="crud-muted">Ordenar:</span>
+        <p-button label="Por tabla" icon="pi pi-sort-amount-down" size="small" [outlined]="true" (onClick)="seedByStandings()" />
+        <p-button label="Inscripción" icon="pi pi-list" size="small" [outlined]="true" (onClick)="seedByEnrollment()" />
+        <p-button label="Al azar" icon="pi pi-sync" size="small" [outlined]="true" (onClick)="seedRandom()" />
+        <span class="crud-muted ml-2">Incluir los primeros</span>
+        <p-button *ngFor="let n of [4, 8, 16]" [label]="'' + n" size="small" [text]="true" [disabled]="seeds.length < n" (onClick)="includeTop(n)" />
+      </div>
+      <p class="crud-hint form-grid__full m-0">
+        Arrastra para cambiar la siembra: el 1 y el 2 solo pueden cruzarse en la final. {{ includedCount() }} equipos incluidos.
+      </p>
+      <ol class="seed-list form-grid__full" cdkDropList (cdkDropListDropped)="dropSeed($event)">
+        <li class="seed" *ngFor="let s of seeds; let i = index" cdkDrag [class.seed--out]="!s.included">
+          <span class="seed__handle" cdkDragHandle aria-label="Arrastrar"><i class="pi pi-bars"></i></span>
+          <span class="seed__num">{{ seedNumber(i) ?? '—' }}</span>
+          <span class="seed__name">{{ s.name }}</span>
+          <p-checkbox [(ngModel)]="s.included" [binary]="true" (ngModelChange)="genPreview.set(null)" [ariaLabel]="'Incluir ' + s.name" />
+          <div *cdkDragPlaceholder class="seed seed--placeholder"></div>
+        </li>
+      </ol>
+    </ng-container>
+
+    <div class="form-grid__full">
+      <p-checkbox [(ngModel)]="genForce" [binary]="true" (ngModelChange)="genPreview.set(null)" inputId="b-force"
+        label="Generar aunque falten partidos de grupos o haya empates en el corte de clasificación" />
+    </div>
+  </div>
+
+  <div class="form-alert" *ngIf="genError()" role="alert">{{ genError() }}</div>
+
+  <div class="gen-preview" *ngIf="genPreview() as p">
+    <p class="crud-strong m-0">Cuadro de {{ p.size }} · {{ p.method }}</p>
+    <p class="crud-muted m-0" *ngIf="p.byes.length">Pasan directo a la 2ª ronda: {{ p.byes.map(name).join(', ') }}</p>
+    <ul class="gen-preview__warnings" *ngIf="p.warnings.length">
+      <li *ngFor="let w of p.warnings">{{ w }}</li>
+    </ul>
+    <div class="gen-preview__rounds">
+      <div class="gen-preview__round" *ngFor="let r of p.rounds.slice(0, 1)">
+        <div class="crud-strong">{{ r.name }}</div>
+        <div class="gen-preview__match" *ngFor="let m of r.matches">
+          <span>{{ name(m.home_team_id) }} vs {{ name(m.away_team_id) }}</span>
+        </div>
+      </div>
+      <div class="gen-preview__round" *ngIf="p.rounds.length > 1">
+        <div class="crud-strong">Después</div>
+        <div class="gen-preview__match" *ngFor="let r of p.rounds.slice(1)">
+          <span>{{ r.name }}</span><span class="crud-muted">{{ r.matches.length }} partido(s)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="genVisible = false" />
+    <p-button label="Vista previa" icon="pi pi-eye" [outlined]="true" [loading]="busy()" (onClick)="preview()"
+      [disabled]="genSource === 'teams' && includedCount() < 2" />
+    <p-button [label]="hasBracket() ? 'Regenerar' : 'Generar cuadro'" icon="pi pi-check" [loading]="busy()"
+      [disabled]="!genPreview()" (onClick)="generate()" />
+  </ng-template>
+</p-dialog>

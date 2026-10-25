@@ -1,24 +1,16 @@
 {
   "name": "sports-tournaments",
   "version": "0.0.0",
-  
-"scripts": {
-  "ng": "ng",
-  "start": "nx serve",
-  "build": "nx build",
-  "build:api": "tsc -p api/tsconfig.json",
-  "start:api": "node api/dist/index.js",
-  "dev": "concurrently -n \"ANGULAR,EXPRESS\" -c \"cyan,green\" \"npm run start\" \"npm run start:api\"",
-  "start-local:api": "nodemon --watch api/src --ext ts --exec ts-node api/src/index.ts",
-  "dev-local": "concurrently -n \"ANGULAR,EXPRESS\" -c \"cyan,green\" \"npm run start\" \"npm run start-local:api\"",
-  "setup-env": "node scripts/setup-env.js",
-  "build:prod": "npm run setup-env && npm run build && npm run build:api",
-  "start:prod": "node api/dist/index.js"
-},
-
+  "scripts": {
+    "ng": "ng",
+    "start": "nx serve",
+    "build": "nx build",
+    "build:prod": "nx build --configuration=production"
+  },
   "private": true,
   "dependencies": {
     "@angular/animations": "^16.2.0",
+    "@angular/cdk": "^16.2.14",
     "@angular/common": "^16.2.0",
     "@angular/compiler": "^16.2.0",
     "@angular/core": "^16.2.0",
@@ -34,6 +26,9 @@
     "dotenv": "^17.3.1",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.20.0",
+    "primeflex": "^3.3.1",
+    "primeicons": "^7.0.0",
+    "primeng": "^16.9.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.13.0"

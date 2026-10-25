@@ -1,0 +1,66 @@
+<div class="bt" [class.bt--flat]="flat" role="list" aria-label="Cuadro de eliminatoria">
+  <section class="bt__col" *ngFor="let col of columns; let ci = index; let lastCol = last; trackBy: trackIndex"
+    [style.animation-delay.ms]="ci * 110" role="listitem" [attr.aria-label]="col.name">
+    <header class="bt__title">{{ col.name }}</header>
+
+    <div class="bt__slots">
+      <div class="bt__pair" *ngFor="let pair of col.pairs; trackBy: trackIndex"
+        [class.bt__pair--joined]="!lastCol && pair.length === 2 && pair[0] && pair[1]"
+        [class.bt__pair--top]="!lastCol && pair.length === 2 && pair[0] && !pair[1]"
+        [class.bt__pair--bottom]="!lastCol && pair.length === 2 && !pair[0] && pair[1]">
+        <div class="bt__slot" *ngFor="let m of pair; trackBy: trackIndex"
+          [class.bt__slot--out]="!!m && !lastCol" [class.bt__slot--in]="!!m && ci > 0 && hasFeeder(m)">
+
+          <ng-container *ngIf="m">
+            <button type="button" class="bt-match" [class.bt-match--live]="m.status === 'in_progress'"
+              [class.bt-match--decided]="decided.has(m.id)" [class.bt-match--static]="!clickable" [disabled]="!clickable"
+              (click)="matchClick.emit(m)">
+              <ng-container *ngFor="let which of ['home', 'away']">
+                <ng-container *ngIf="side(m, $any(which)) as s">
+                  <div class="bt-team" [class.bt-team--winner]="s.winner" [class.bt-team--loser]="s.loser" [class.bt-team--entered]="s.entered">
+                    <ng-container *ngIf="s.team; else tbd">
+                      <span class="bt-team__badge" [style.background]="s.team.primary_color || '#c7cbe0'">
+                        <img *ngIf="s.team.logo_url" [src]="s.team.logo_url" alt="" loading="lazy" />
+                        <ng-container *ngIf="!s.team.logo_url">{{ initials(s.team) }}</ng-container>
+                      </span>
+                      <span class="bt-team__name">{{ s.team.name }}</span>
+                    </ng-container>
+                    <ng-template #tbd>
+                      <span class="bt-team__badge bt-team__badge--tbd">?</span>
+                      <span class="bt-team__name bt-team__name--tbd">{{ s.pending ? 'Por definir' : '—' }}</span>
+                    </ng-template>
+                    <span class="bt-team__score" *ngIf="s.score !== null">
+                      {{ s.score }}<sup *ngIf="s.pens !== null">({{ s.pens }})</sup>
+                    </span>
+                  </div>
+                </ng-container>
+              </ng-container>
+              <div class="bt-match__meta">
+                <span *ngIf="m.status === 'in_progress'" class="bt-match__live"><span class="bt-dot"></span> En juego</span>
+                <span *ngIf="m.status === 'finished'">Final</span>
+                <span *ngIf="m.status === 'postponed'">Suspendido</span>
+                <span *ngIf="m.status === 'cancelled'">Cancelado</span>
+                <span *ngIf="m.status === 'scheduled'">{{ formatWhen(m.scheduled_local) || 'Sin fecha' }}</span>
+                <span *ngIf="m.field_name && m.status === 'scheduled'"> · {{ m.field_name }}</span>
+              </div>
+            </button>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bt__col bt__col--champion" *ngIf="champion" [style.animation-delay.ms]="columns.length * 110">
+    <header class="bt__title">Campeón</header>
+    <div class="bt__slots">
+      <div class="bt-champion">
+        <span class="bt-champion__trophy" aria-hidden="true">🏆</span>
+        <span class="bt-team__badge bt-team__badge--lg" [style.background]="champion.primary_color || '#c7cbe0'">
+          <img *ngIf="champion.logo_url" [src]="champion.logo_url" alt="" loading="lazy" />
+          <ng-container *ngIf="!champion.logo_url">{{ initials(champion) }}</ng-container>
+        </span>
+        <strong class="bt-champion__name">{{ champion.name }}</strong>
+      </div>
+    </div>
+  </section>
+</div>

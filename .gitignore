@@ -45,3 +45,4 @@ Thumbs.db
 .nx/workspace-data
 api/src/config/environment.ts
 api/node_modules
+*.patch

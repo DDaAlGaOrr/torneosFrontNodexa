@@ -1,10 +1,17 @@
 import { inject } from '@angular/core';
-import { CanActivateFn } from '@angular/router';
+import { CanActivateFn, Router } from '@angular/router';
+import { AuthService, UserRole } from '../../admin/auth/auth/service/auth.service';
 
+/**
+ * Restringe una ruta a ciertos roles:  { path: 'usuarios', canActivate: [roleGuard], data: { roles: ['admin'] } }
+ * Sin sesión -> /login. Con sesión pero sin el rol -> inicio público.
+ */
 export const roleGuard: CanActivateFn = (route) => {
-  const userRole = 'rolSoccer'; // fake
+  const auth = inject(AuthService);
+  const router = inject(Router);
 
-  const allowedRoles = route.data?.['roles'] || [];
+  if (!auth.isLoggedIn()) return router.createUrlTree(['/login']);
 
-  return allowedRoles.includes(userRole);
+  const allowed: UserRole[] = route.data?.['roles'] ?? [];
+  return allowed.length === 0 || auth.hasRole(...allowed) ? true : router.createUrlTree(['/']);
 };

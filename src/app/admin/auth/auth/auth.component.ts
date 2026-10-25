@@ -2,12 +2,17 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { MessageModule } from 'primeng/message';
+import { PasswordModule } from 'primeng/password';
 import { AuthService } from './service/auth.service';
+import { apiErrorMessage } from '../../../core/api/api-error';
 
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ButtonModule, InputTextModule, MessageModule, PasswordModule],
   templateUrl: './auth.component.html',
   styleUrls: ['./auth.component.scss'],
 })
@@ -48,9 +53,8 @@ export class AuthComponent implements OnInit {
         this.redirectAfterLogin();
       },
       error: (err) => {
-        alert('usuario o contraseña incorrectos')
         this.loading = false;
-        this.error = err.error?.error || 'Credenciales incorrectas';
+        this.error = apiErrorMessage(err, 'No se pudo iniciar sesión');
       },
     });
   }
@@ -58,19 +62,8 @@ export class AuthComponent implements OnInit {
 
 
 
-  // Redirigir según el rol y deporte del usuario
+  // Por ahora solo el administrador tiene panel; los demás roles se agregarán después
   private redirectAfterLogin() {
-    const user = this.authService.getUser();
-    if (!user) return;
-
-    if (user.role === 'admin') {
-      // Admin general → overview de soccer por defecto
-      this.router.navigate(['/admin/soccer/tournaments']);
-    } else if (user.sport) {
-      // Admin de deporte → su propio deporte
-      this.router.navigate([`/admin/${user.sport}/tournaments`]);
-    } else {
-      this.router.navigate(['/admin']);
-    }
+    this.router.navigate(['/admin']);
   }
 }

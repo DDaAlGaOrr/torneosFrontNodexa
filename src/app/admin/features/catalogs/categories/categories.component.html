@@ -1,0 +1,76 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="crud-page">
+  <div class="crud-page__header">
+    <div>
+      <h2 class="crud-page__title">Categorías</h2>
+      <p class="crud-page__subtitle">Catálogo de categorías que se asignan a equipos y torneos.</p>
+    </div>
+    <p-button label="Nueva categoría" icon="pi pi-plus" (onClick)="openCreate()" />
+  </div>
+
+  <div class="crud-alert" *ngIf="error()" role="alert">
+    <span>{{ error() }}</span>
+    <button type="button" aria-label="Reintentar" (click)="load()">↻</button>
+  </div>
+
+  <div class="crud-card">
+    <p-table #dt [value]="items()" [loading]="loading()" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]"
+      [globalFilterFields]="['name']" [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first}–{last} de {totalRecords}" responsiveLayout="scroll" dataKey="id">
+      <ng-template pTemplate="caption">
+        <div class="crud-toolbar">
+          <span class="p-input-icon-left crud-search">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" placeholder="Buscar categoría..."
+              (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+          </span>
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="id" style="width: 110px">ID <p-sortIcon field="id" /></th>
+          <th pSortableColumn="name">Nombre <p-sortIcon field="name" /></th>
+          <th class="crud-end">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-c>
+        <tr>
+          <td class="crud-muted">#{{ c.id }}</td>
+          <td class="crud-strong">{{ c.name }}</td>
+          <td>
+            <div class="crud-actions">
+              <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" pTooltip="Editar" tooltipPosition="top" ariaLabel="Editar" (onClick)="openEdit(c)" />
+              <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" tooltipPosition="top" ariaLabel="Eliminar" (onClick)="remove(c)" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="3" class="crud-table__empty">{{ loading() ? 'Cargando...' : 'No se encontraron categorías' }}</td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog [(visible)]="dialogVisible" [modal]="true" [draggable]="false" [style]="{ width: '440px', maxWidth: '95vw' }"
+  [header]="editing ? 'Editar categoría' : 'Nueva categoría'">
+  <form [formGroup]="form" (ngSubmit)="save()" class="form-grid" novalidate>
+    <div class="form-grid__full">
+      <label for="cat-name">Nombre de la categoría</label>
+      <input pInputText id="cat-name" formControlName="name" placeholder="Ej. Sub-17" maxlength="60" />
+      <small class="field-error" *ngIf="fieldInvalid('name') && form.controls.name.errors?.['maxlength']">Máximo 50 caracteres.</small>
+      <small class="field-error" *ngIf="fieldInvalid('name') && !form.controls.name.errors?.['maxlength']">El nombre es obligatorio.</small>
+    </div>
+  </form>
+  <div class="form-alert" *ngIf="formError()" role="alert">{{ formError() }}</div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="dialogVisible = false" />
+    <p-button [label]="editing ? 'Guardar cambios' : 'Crear categoría'" icon="pi pi-check" [loading]="saving()" (onClick)="save()" />
+  </ng-template>
+</p-dialog>

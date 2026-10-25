@@ -1,0 +1,6 @@
+/*
+ * Orden de prioridad de las capas CSS (de menor a mayor). Debe cargarse antes que cualquier otro estilo.
+ * PrimeNG 16.9+ publica sus estilos dentro de @layer primeng; los estilos sin capa siempre ganan a los
+ * que están en una capa. Por eso el reset global vive en "reset", por debajo de PrimeNG.
+ */
+@layer reset, primeng;

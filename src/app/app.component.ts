@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { PrimeNGConfig } from 'primeng/api';
+import { PRIMENG_ES } from './core/ui/primeng-es';
 
 @Component({
   standalone: true,
@@ -11,4 +13,8 @@ import { RouterOutlet } from '@angular/router';
 })
 export class AppComponent {
   title = 'sports-tournaments';
+
+  constructor() {
+    inject(PrimeNGConfig).setTranslation(PRIMENG_ES);
+  }
 }

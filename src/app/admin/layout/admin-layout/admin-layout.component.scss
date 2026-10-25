@@ -42,8 +42,14 @@
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1199px) {
   .app-layout__main {
     width: 100%;
+  }
+}
+
+@media (max-width: 575px) {
+  .app-layout__content {
+    padding: 20px 16px;
   }
 }

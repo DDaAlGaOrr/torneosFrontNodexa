@@ -1,0 +1,34 @@
+.tournaments__name {
+  font-weight: 600;
+  color: #1a1d2e;
+}
+
+.tournaments__sub {
+  color: #8b8fa8;
+  font-size: 12px;
+}
+
+.tournaments__count {
+  font-variant-numeric: tabular-nums;
+}
+
+.enroll__add {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.enroll__add p-dropdown {
+  flex: 1;
+}
+
+:host ::ng-deep .enroll__add .p-dropdown {
+  width: 100%;
+}
+
+.enroll__hint {
+  margin: 0 0 12px;
+  color: #8b8fa8;
+  font-size: 13px;
+}

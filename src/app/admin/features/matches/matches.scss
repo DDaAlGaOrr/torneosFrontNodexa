@@ -1,0 +1,89 @@
+// Estilos compartidos por las pantallas de partidos (lista, mis partidos y captura).
+$text-primary: #1a1d2e;
+$live: #10b981;
+
+.match-col-team {
+  white-space: nowrap;
+}
+
+.match-col-score {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.match-score {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: $text-primary;
+}
+
+.match-pens {
+  font-size: 11.5px;
+  color: #8b8fa8;
+}
+
+.match-live {
+  color: $live;
+  font-weight: 600;
+}
+
+.match-live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $live;
+  animation: match-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes match-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+// ── Mis partidos ────────────────────────────────────────────────────────────
+.my-matches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.my-match {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  color: inherit;
+  text-decoration: none;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+    transform: translateY(-1px);
+  }
+
+  &__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+  }
+
+  &__teams {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+
+    > span:last-child {
+      text-align: right;
+    }
+  }
+
+  &__meta {
+    font-size: 12.5px;
+  }
+}

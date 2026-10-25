@@ -1,0 +1,89 @@
+<div class="crud-page">
+  <a class="crud-back" routerLink="/admin/torneos"><i class="pi pi-arrow-left"></i> Volver a torneos</a>
+
+  <div class="crud-page__header">
+    <div>
+      <h2 class="crud-page__title">{{ tournament()?.name || 'Partidos' }}</h2>
+      <p class="crud-page__subtitle">
+        {{ counts().total }} partidos · {{ counts().finished }} finalizados
+        <ng-container *ngIf="counts().live"> · <span class="match-live">{{ counts().live }} en juego</span></ng-container>
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <a pButton label="Calendario" icon="pi pi-calendar" [routerLink]="['/admin/torneos', tournamentId, 'calendario']"></a>
+      <a *ngIf="tournament()?.format !== 'league'" pButton label="Eliminatoria" icon="pi pi-sitemap" class="p-button-outlined"
+        [routerLink]="['/admin/torneos', tournamentId, 'llaves']"></a>
+      <p-button label="Actualizar" icon="pi pi-refresh" [outlined]="true" (onClick)="load()" />
+    </div>
+  </div>
+
+  <div class="crud-alert" *ngIf="error()" role="alert">
+    <span>{{ error() }}</span>
+    <button type="button" aria-label="Reintentar" (click)="load()">↻</button>
+  </div>
+
+  <div class="crud-card">
+    <p-table #dt [value]="filtered()" [loading]="loading()" [paginator]="true" [rows]="25" [rowsPerPageOptions]="[25, 50, 100]"
+      [globalFilterFields]="['home_team', 'away_team', 'round_name', 'field_name']" responsiveLayout="scroll" dataKey="id">
+      <ng-template pTemplate="caption">
+        <div class="crud-toolbar">
+          <span class="p-input-icon-left crud-search">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" placeholder="Buscar equipo, jornada o cancha..."
+              (input)="dt.filterGlobal($any($event.target).value, 'contains')" />
+          </span>
+          <p-dropdown [options]="statusOptions" optionLabel="label" optionValue="value" [(ngModel)]="statusFilter"
+            placeholder="Todos los estatus" [showClear]="true" />
+        </div>
+      </ng-template>
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="round_order">Jornada <p-sortIcon field="round_order" /></th>
+          <th class="match-col-team">Local</th>
+          <th class="match-col-score">Marcador</th>
+          <th class="match-col-team">Visitante</th>
+          <th pSortableColumn="scheduled_at">Fecha <p-sortIcon field="scheduled_at" /></th>
+          <th>Cancha</th>
+          <th pSortableColumn="status">Estatus <p-sortIcon field="status" /></th>
+          <th class="crud-end">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-m>
+        <tr>
+          <td class="crud-muted">{{ m.round_name }}</td>
+          <td class="match-col-team crud-strong">
+            <span class="crud-swatch" [style.background]="m.home_color || '#d1d5db'"></span>{{ m.home_team || 'Por definir' }}
+          </td>
+          <td class="match-col-score">
+            <span class="match-score" *ngIf="m.status !== 'scheduled'; else vs">{{ m.score_home }} – {{ m.score_away }}</span>
+            <ng-template #vs><span class="crud-muted">vs</span></ng-template>
+            <div class="match-pens" *ngIf="m.penalties_home !== null">({{ m.penalties_home }} – {{ m.penalties_away }} pen.)</div>
+          </td>
+          <td class="match-col-team crud-strong">
+            <span class="crud-swatch" [style.background]="m.away_color || '#d1d5db'"></span>{{ m.away_team || 'Por definir' }}
+          </td>
+          <td class="crud-muted">{{ m.scheduled_at ? (m.scheduled_at | date: 'EEE dd MMM, HH:mm') : 'Sin fecha' }}</td>
+          <td class="crud-muted">{{ m.field_name || '—' }}</td>
+          <td><p-tag [value]="statusLabel(m.status)" [severity]="statusSeverity(m.status)" /></td>
+          <td>
+            <div class="crud-actions">
+              <a pButton class="p-button-sm" [class.p-button-outlined]="m.status === 'finished'"
+                [routerLink]="['/admin/torneos', tournamentId, 'partidos', m.id]"
+                [label]="m.status === 'finished' ? 'Ver' : 'Capturar'" icon="pi pi-pencil"></a>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="crud-table__empty">
+            <p>{{ loading() ? 'Cargando...' : 'Este torneo todavía no tiene partidos.' }}</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
